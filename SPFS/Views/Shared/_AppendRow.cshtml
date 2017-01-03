@@ -1,0 +1,90 @@
+﻿
+@model SPFS.Models.RatingsViewModel
+@using SPFS.Helpers
+@{
+    var index = ViewBag.newIndex;
+}
+@for (int i = index; i < Model.RatingRecords.Count; i++)
+{
+    <tr id="part1">
+        <td>
+            <div class="form-horizontal">
+                @Model.RatingRecords[i].SupplierName.SplitCamelCase().Left(20)
+                <span class="glyphicon glyphicon-info-sign alert-warning" style="float:right" title="@Model.RatingRecords[i].SupplierName"></span>
+                @Html.HiddenFor(modelItem => Model.RatingRecords[i].SupplierName)
+            </div>
+        </td>
+
+        <td>
+            <font style="color:green">$</font>@Html.DisplayFor(modelItem => Model.RatingRecords[i].Total_Spend)
+            @Html.HiddenFor(modelItem => Model.RatingRecords[i].Total_Spend)
+        </td>
+
+
+        <td rowspan="2">
+            @Html.DisplayFor(modelItem => Model.RatingRecords[i].Reject_incident_count)
+            @Html.HiddenFor(modelItem => Model.RatingRecords[i].Reject_incident_count)
+        </td>
+
+
+        <td rowspan="2">
+            @Html.DisplayFor(modelItem => Model.RatingRecords[i].Reject_parts_count)
+            @Html.HiddenFor(modelItem => Model.RatingRecords[i].Reject_parts_count)
+        </td>
+
+
+        <td rowspan="2">
+            @Html.TextBoxFor(modelItem => Model.RatingRecords[i].Inbound_parts, null, new { @class = "form-control", style = "width:100%" })
+        </td>
+        @*<td rowspan="2"> @Html.DisplayFor(modelItem => item.Inbound_parts)</td>*@
+
+        <td rowspan="2">
+            @Html.DisplayFor(modelItem => Model.RatingRecords[i].PPM)
+            @Html.HiddenFor(modelItem => Model.RatingRecords[i].PPM)
+        </td>
+
+
+        <td rowspan="2">
+            @Html.DisplayFor(modelItem => Model.RatingRecords[i].IPM)
+            @Html.HiddenFor(modelItem => Model.RatingRecords[i].IPM)
+        </td>
+
+
+        @*<td rowspan="2">@Html.DisplayFor(modelItem => item.OTR)</td>
+            <td rowspan="2"> @Html.DisplayFor(modelItem => item.OTD)</td>*@
+
+        <td rowspan="2">@Html.TextBoxFor(modelItem => Model.RatingRecords[i].OTR, null, new { @class = "form-control", style = "width:100%" })</td>
+
+        <td rowspan="2"> @Html.TextBoxFor(modelItem => Model.RatingRecords[i].OTD, null, new { @class = "form-control", style = "width:100%" })</td>
+
+        <td rowspan="2">
+            @Html.DisplayFor(modelItem => Model.RatingRecords[i].PCT)
+            @Html.HiddenFor(modelItem => Model.RatingRecords[i].PCT)
+        </td>
+
+        @*<td rowspan="2"> @Html.DisplayFor(modelItem => item.PFR)</td>*@
+
+        <td rowspan="2"> @Html.TextBoxFor(modelItem => Model.RatingRecords[i].PFR, null, new { @class = "form-control lefttext", style = "width:60%" })</td>
+
+    </tr>
+    <tr id="part2">
+        <td>
+            @Html.DisplayFor(modelItem => Model.RatingRecords[i].CID)
+            @Html.HiddenFor(modelItem => Model.RatingRecords[i].CID)
+        </td>
+
+
+        <td>
+            @Html.DisplayFor(modelItem => Model.RatingRecords[i].DUNS)
+            @Html.HiddenFor(modelItem => Model.RatingRecords[i].DUNS)
+        </td>
+
+
+
+    </tr>
+
+}
+
+
+
+

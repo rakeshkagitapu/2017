@@ -1,0 +1,43 @@
+﻿
+@model SPFS.Models.RatingsViewModel
+
+<div class="row col-md-12" style="margin-top: 10px">
+    <div class="row">
+        <div class="col-md-10 input-group">
+            @*@Html.Label("Search by")*@
+
+            @Html.TextBox("search", "", new { @class = "form-control", id = "SupplierID", maxlength = "30", placeholder = "Search by Supplier Name ..." })
+            <span class="input-group-btn">
+                <button id="btnFilter" type="button" value="Search" class="btn btn-primary ">
+                    <span class="glyphicon glyphicon-search"></span>
+                </button>
+            </span>
+        </div>
+        <div class="col-md-2">
+            <button type="button" class="btn btn-primary btnOK">
+                <span class="glyphicon glyphicon-floppy-save"></span>
+                <span>OK</span>
+            </button>
+        </div>
+
+    </div>
+    <br />
+    <div class="row">
+        <div class="col-md-9">
+            <div class="form-group">
+                @Html.DropDownList("selectSuppliers", ViewBag.Suppliers as IEnumerable<SelectListItem>, new { @class = "form-control", style = "width: 500px ; border-radius:5px", size = 10, id = "selectSupplierID" })
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script type="text/javascript">
+    //$(document).ready(function () {
+    //    $('.btnOK').bind("click", function () {
+    //        debugger
+    //    });
+    //    });
+</script>
+

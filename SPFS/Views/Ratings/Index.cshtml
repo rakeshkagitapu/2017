@@ -1,0 +1,659 @@
+﻿
+@model SPFS.Models.RatingsViewModel
+@{
+    ViewBag.Title = "Ratings";
+    var count = Model.RatingRecords != null ? Model.RatingRecords.Count : 0;
+
+
+}
+
+@*@using (Html.BeginForm(new { enctype = "multipart/form-data" }))*@
+@using (Html.BeginForm(null, null, FormMethod.Post, new { enctype = "multipart/form-data", @id = "Ratings" }))
+{
+    @Html.AntiForgeryToken()
+
+    @Html.HiddenFor(m => m.isUpload)
+    @Html.Hidden("noOfRecords", @count)
+    @Html.HiddenFor(m => m.IsAlert)
+    @Html.HiddenFor(m => m.IsStagingRatings)
+    @Html.HiddenFor(m => m.IsCurrentRatings)
+    @Html.HiddenFor(m => m.IsPreviousRatings)
+    @Html.HiddenFor(m => m.IsPreviousStagingRatings)
+
+    @Html.HiddenFor(m => m.OldResults)
+    @Html.HiddenFor(m => m.EditMode)
+    @Html.HiddenFor(m => m.ShowResult)
+    <h2>Ratings Page</h2>
+    <hr />
+    <div class="row col-md-12 header" style="padding-top:15px">
+        <div class="col-md-6">
+            <div class="form-group">
+                @Html.LabelFor(model => model.SiteID, new { @class = "control-label col-md-2" })
+                <div class="col-md-10">
+                    @Html.DropDownListFor(model => model.SiteID, ViewBag.Sites as IEnumerable<SelectListItem>, "",
+                       new { @class = "selectpicker col-md-12", data_live_search = "true", data_size = "10", required = "true" })
+                    @Html.ValidationMessageFor(model => model.SiteID)
+                </div>
+            </div>
+
+        </div>
+        <div class="col-md-6">
+            <div class="form-group col-md-6">
+                @Html.LabelFor(model => model.Month, new { @class = "control-label col-md-3" })
+                <div class="col-md-9">
+                    @Html.DropDownListFor(model => model.Month, ViewBag.Months as IEnumerable<SelectListItem>, new { @class = "form-control" })
+                    @Html.ValidationMessageFor(model => model.Month)
+                </div>
+            </div>
+            <div class="form-group form-group-tight col-md-6">
+                @Html.LabelFor(model => model.Year, new { @class = "control-label col-md-3" })
+                <div class="input-group">
+                    @Html.DropDownListFor(model => model.Year, ViewBag.Years as IEnumerable<SelectListItem>, new { @class = "form-control" })
+                    @*@if (!Model.ShowResult)
+                        {*@
+                    <span class="input-group-btn" title="Search">
+                        <button type="submit" value="Search" name="action:Search" class="btn btn-warning" onclick="OnBeginPostBack_Search(this)">
+                            <span class="glyphicon glyphicon-search" />
+                        </button>
+                    </span>
+                    @*}*@
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <hr />
+
+    if (Model.IsAlert)
+    {
+
+        <div class="panel panel-default panel-primary">
+            <div class="panel-heading panel-primary">
+                <h3 class="panel-title">Please select</h3>
+            </div>
+            <div class="panel-body" id="Alertpanel">
+                @Html.Raw(ViewBag.alertmsg)
+
+                <div class="btn-group pull-right">
+                    @if (Model.IsPreviousStagingRatings)
+                    {
+
+                    <a href="@Url.Action("LoadAlertData", "Ratings", new { SiteID =Model.SiteID,Year=Model.Year,Month=Model.Month, isStaging = true ,isLastmonth=true})" class="btn btn-success btn-md">Yes - Load last months data </a>
+                    <a href="@Url.Action("LoadAlertData", "Ratings", new { SiteID =Model.SiteID,Year=Model.Year,Month=Model.Month, isStaging = false, isLastmonth = false})" class="btn btn-danger btn-md">No - Continue with current ratings</a>
+                    }
+                    @if (Model.IsCurrentRatings)
+                    {
+                    <a href="@Url.Action("LoadAlertData", "Ratings", new { SiteID =Model.SiteID,Year=Model.Year,Month=Model.Month, isStaging = false,isLastmonth=false})" class="btn btn-success btn-smd">Yes - Overwrite existing data </a>
+                    <a href="@Url.Action("Index", "Ratings")" class="btn btn-danger btn-md">No - Clear Search criteria</a>
+                    }
+
+                </div>
+            </div>
+        </div>
+
+    }
+    else if (Model.ShowResult)
+    {
+        if (!Model.OldResults)
+        {
+            if (!ViewData.ModelState.IsValid)
+            {
+                <div class="alert alert-warning alert-dismissible col-md-12" role="alert" style="padding-top: 1px;">
+                    <span class="glyphicon  glyphicon-info-sign"></span><strong>Errors!</strong> Please fix below errors
+                </div>
+            }
+            <div id="output" class="col-md-12">
+                @Html.Partial("_SupplierRatings", Model)
+            </div>
+
+            <br />
+            <div class="row col-md-12">
+                <div class="pull-left">
+
+                    <button type="button" value="Add New Supplier to Rate" class="btn btn-default btn-md btnAdd add-item">
+                        <span class="glyphicon glyphicon-plus" aria-hidden="true"></span> Add Unrated Supplier
+                    </button>
+
+                </div>
+                <div class="pull-right">
+                    <a href="@Url.Action("Index", "Home")" class="btn btn-danger" onclick="return confirm('Are you sure, all data will be lost')">
+                        <span class="glyphicon glyphicon-remove"></span> Cancel
+                    </a>
+                    <input type="button" value="Clear" onclick="javascript:window.location=('@Url.Action("Index","Ratings")')" class="btn btn-warning" />
+                    @*<a href="@Url.Action("Index", "Ratings")" class="btn btn-warning" onclick="return confirm('Are you sure, all data will be lost')">
+                            <span class="glyphicon glyphicon-remove-sign"></span> Clear
+                        </a>*@
+                 
+                    <button type="button" id="btnSave" class="btn btn-primary">
+                        <span class="glyphicon glyphicon-floppy-save"></span> Save
+
+                    </button>
+                  @if(!Model.ShowSubmit)
+                    {
+                    <button type="button" id="btnSubmit" class="btn btn-primary disabled">
+                        <span class="glyphicon glyphicon-send"></span> Submit Ratings
+
+                    </button>
+                    }
+                    else
+                    {
+                    <button type="button" id="btnSubmit" class="btn btn-primary">
+                        <span class="glyphicon glyphicon-send"></span> Submit Ratings
+
+                    </button>
+                    }
+                </div>
+
+            </div>
+        }
+        else
+        {
+            <div id="output" class="col-md-12">
+                @Html.Partial("_SupplierRatingsOld", Model)
+            </div>
+
+            <br />
+            <div class="row col-md-12">
+
+                <div class="pull-right">
+                    <a href="@Url.Action("Index", "Home")" class="btn btn-danger" onclick="return confirm('Are you sure, all data will be lost')">
+                        <span class="glyphicon glyphicon-remove"></span> Cancel
+                    </a>
+                    <a href="@Url.Action("Index", "Ratings")" class="btn btn-warning" onclick="return confirm('Are you sure, all data will be lost')">
+                        <span class="glyphicon glyphicon-remove-sign"></span> Clear
+                    </a>
+
+                </div>
+
+            </div>
+        }
+
+    }
+    else
+    {
+        if (Model.EditMode)
+        {
+            <h2>Select location and month and click on search to show ratings </h2>
+        }
+        else
+        {
+            <div class="alert alert-warning"><strong>Info!</strong> There are no records found for this Search Criteria.</div>
+        }
+    }
+
+    if (Model.EditMode)
+    {
+        <div id="popSup" title="Search Supplier" style="overflow: auto;">
+
+        </div>
+    }
+
+
+}
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        $('#btnSave').click(function () {
+            
+            var Records = [];
+            var CID, Inbound, OTR, OTD, PFR;
+            var len = ($('#container tr').length)/2;
+            for (var i = 0; i < len; i += 1) {
+
+                CID =  $('#RatingRecords_' + i + '__CID').val();//parseInt($('#container tr')[i + 1].cells['0'].innerText, 10);
+                Inbound = $('#RatingRecords_' + i + '__Inbound_parts').val();
+                OTR = $('#RatingRecords_' + i + '__OTR').val();
+                OTD = $('#RatingRecords_' + i + '__OTD').val();
+                PFR = $('#RatingRecords_' + i + '__PFR').val();
+
+                if (isFinite(Inbound)) {
+
+                } else {
+                    Inbound = 0;
+                }
+                if (isFinite(OTR)) {
+
+                } else {
+                    OTR = 0;
+                }
+                if (isFinite(OTD)) {
+
+                } else {
+                    OTD = 0;
+                }
+                if (isFinite(PFR)) {
+                } else {
+                    PFR = 0;
+                }
+                if (Inbound > 0) {
+                    Records.push({ CID: CID, Inbound_parts: Inbound, OTR: OTR, OTD: OTD, PFR: PFR })
+                }
+            }
+
+            var siteID = @Html.Raw(Json.Encode(Model.SiteID));
+            var month =@Html.Raw(Json.Encode(Model.Month));
+            var year = @Html.Raw(Json.Encode(Model.Year));
+            
+            if (Records.length > 0) {
+                if (confirm('Are you sure you want to save, all records that have no inbound quantity will be ommited?')) {
+                    $("#dlgmodal").dialog('open');
+                    $('#dlgmodal span').text('Saving Records...');
+                    $.ajax({
+                        url: '@Url.Action("SaveRatings", "Ratings")',
+                        data:  JSON.stringify({ 'SavedRecords': Records,SiteID: siteID, Month: month, Year:year}), //,CIDArray:CIDarray}),
+                        traditional: true,
+                        contentType: "application/json; charset=utf-8",
+                        type: 'POST',
+                        cache: false,
+                        async: false,
+                        success: function (data) {
+
+
+                        },
+                        complete: function (jqXHR, textStatus, errorThrown) {
+                            $("#dlgmodal").closest('.ui-dialog-content').dialog("close");
+                            window.location.href = "@Html.Raw(@Url.Action("SavedResults", "Ratings", new { @SiteID= @Html.Raw(Json.Encode(Model.SiteID)), @Year = @Html.Raw(Json.Encode(Model.Year)), @Month= @Html.Raw(Json.Encode(Model.Month))}))";
+                        },
+                        error:function(e)
+                        {
+                            alert("Error ! Saving records "+ e);
+                        }
+
+                    });
+                               
+                }
+            }
+            else {
+                alert('No rows to save');
+            }
+
+        });
+        $('#btnSubmit').click(function () {
+            debugger;
+
+            var Records = [];
+            var CID, Inbound, OTR, OTD, PFR;
+            var len = ($('#container tr').length)/2;
+            for (var i = 0; i < len; i += 1) {
+
+                CID =  $('#RatingRecords_' + i + '__CID').val();//parseInt($('#container tr')[i + 1].cells['0'].innerText, 10);
+                Inbound = $('#RatingRecords_' + i + '__Inbound_parts').val();
+                OTR = $('#RatingRecords_' + i + '__OTR').val();
+                OTD = $('#RatingRecords_' + i + '__OTD').val();
+                PFR = $('#RatingRecords_' + i + '__PFR').val();
+
+                if (isFinite(Inbound)) {
+
+                } else {
+                    Inbound = 0;
+                }
+                if (isFinite(OTR)) {
+
+                } else {
+                    OTR = 0;
+                }
+                if (isFinite(OTD)) {
+
+                } else {
+                    OTD = 0;
+                }
+                if (isFinite(PFR)) {
+                } else {
+                    PFR = 0;
+                }
+                if (Inbound > 0) {
+                    Records.push({ CID: CID, Inbound_parts: Inbound, OTR: OTR, OTD: OTD, PFR: PFR })
+                }
+            }
+           
+            var siteID = @Html.Raw(Json.Encode(Model.SiteID));
+            var month =@Html.Raw(Json.Encode(Model.Month));
+            var year = @Html.Raw(Json.Encode(Model.Year));
+            debugger
+            if (Records.length > 0) {
+                $("#dlgmodal").dialog('open');
+                $('#dlgmodal span').text('Submitting Records...');
+                $.ajax({
+                    url: '@Url.Action("SubmitRatings", "Ratings")',
+
+                    data:  JSON.stringify({ 'SubmittedRecords': Records,SiteID: siteID, Month: month, Year:year}),
+                    traditional: true,
+                    contentType: "application/json; charset=utf-8",
+                    type: 'POST',
+                    cache: false,
+                    async: false,
+                    success: function (data) {
+
+                    },
+                    complete: function (jqXHR, textStatus, errorThrown) {
+
+                        $("#dlgmodal").closest('.ui-dialog-content').dialog("close");
+                    }
+                });
+
+            }
+            else {
+                alert('No rows to save');
+            }
+
+        });
+        if ('@Model.IsAlert' == 'True') {
+            var bgColor = '#f2dede';
+            var bgOriginal = $('#Alertpanel').css('background-color');
+            var inTime = 1000;
+            var outTime = 2000;
+
+
+            $(':animated').promise().done(function () {
+                $('#Alertpanel').animate({ backgroundColor: bgColor }, inTime, function () {
+                    $('#Alertpanel').animate({ backgroundColor: bgOriginal }, outTime);
+                });
+
+            });
+        }
+
+
+        var siteId = $("#SiteID option:selected").val();
+        $('#SiteID').change(function () {
+            var siteId = $("#SiteID option:selected").val();
+            if (siteId != "") {
+
+                $(this).valid();
+
+            }
+
+        });
+
+        var CID = $("#SelectSupplierID option:selected").val();
+
+        //$('#SupplierID').change(function () {
+        //    var SupName = $('#SupplierID').val();
+        //    SearchSupplierByName(SupName);
+
+        //});
+
+        //Sorting
+        $(document).on("click", "#btnFilter", function () {
+            var SupName = $('#SupplierID').val();
+            SearchSupplierByName(SupName);
+
+        });
+
+        function SearchSupplierByName(SupName) {
+            debugger
+            $.ajax({
+                url: '@Url.Action("GetSupplierbyName", "Ratings")',
+                //Passes the content of an input up
+                data: { nameString: SupName },
+                contentType: "application/json; charset=utf-8",
+                type: 'GET',
+                async: false,
+                cache: true,
+
+                success: function (data) {
+                    $('#selectSupplierID').find('option').remove();
+                    $.each(data, function (i, optionData) {
+                        $('#selectSupplierID').append($('<option></option>').val(optionData.Value).html(optionData.Text));
+                    });
+                }
+            });
+        };
+
+        $('.btnAdd').bind("click", function () {
+            debugger
+            $.ajax({
+                url: '@Url.Action("LoadSuppliers", "Ratings")',
+                //Passes the content of an input up
+                contentType: "application/json; charset=utf-8",
+                type: 'GET',
+                cache: false,
+                success: function (data) {
+                    $('#popSup').children().remove();
+                    $('#popSup').html(data);
+                }
+            });
+
+            $("#popSup").dialog('option', 'title', 'Select Supplier');
+            $("#popSup").dialog("open");
+
+        });
+
+        //$('.btnAdd').bind("click", function () {
+        //    $('#popSup').css("visibility", "visible");
+        //    $("#popSup").dialog('option', 'title', "Select Supplier");
+        //    $("#popSup").dialog("open");
+        //    $('.btnOK').prop('disabled', true);
+        //});
+
+        //$('.btnOK').live("click", function ()
+        $('#popSup').on("click", ".btnOK", function (e) {
+
+            var selectedText = $("#selectSupplierID").find("option:selected").text();
+            var selectedValue = $("#selectSupplierID").val();
+            if (selectedValue != null) {
+                var tableRow = $("#ratings tr td:nth-child(1)").filter(function () {
+                    return $(this).is(":contains('" + selectedValue + "')");
+                }).closest("tr");
+
+                if (tableRow.length > 0) {
+                    $("#ratings").find('tr').removeClass('active');
+                    var oldrec = $("#selectedCid").closest('tr').attr("id", "");
+                    $("#popSup").closest('.ui-dialog-content').dialog("close");
+
+                    ShowDialogBox('Warning', 'Supplier exists please check.', 'Ok', '', '', null);
+                    var row = tableRow.addClass('active');
+                    row.attr("id", "selectedCid");
+
+                    var container = $('tbody');
+                    var scrollTo = $('#selectedCid');
+
+                    container.animate({
+                        scrollTop: (scrollTo.offset().top - 30) - container.offset().top + container.scrollTop()
+                    });
+                }
+                else {
+                    debugger
+                    $.ajax({
+                        url: '@Url.Action("AddRowReload", "Ratings")',
+                        //Passes the content of an input up
+                        data: { CID: selectedValue }, //,SiteID:siteId,count:cont
+                        contentType: "application/json; charset=utf-8",
+                        type: 'GET',
+                        cache: false,
+                        dataType: 'html',
+                        async: false,
+                        success: function (data) {
+                            var finaltext = selectedText + " Added to list";
+                            $("#selectSupplierID").find("option:selected").prop('selected', false);
+                            $('#output').children().remove();
+                            $('#output').html(data);
+                            $("#popSup").closest('.ui-dialog-content').dialog("close");
+                            $('#RatingSuppliers').selectpicker('refresh');
+                        },
+                        error: function (ts) { alert(ts.responseText) }
+                    });
+                }
+            }
+            else {
+                ShowDialogBox('Alert', 'Supplier not selected!.', 'Ok', '', '', null);
+                //alert("Select Supplier");
+            }
+        });
+
+
+        //$('#selectSupplierID').change(function () {
+        //    debugger
+        //    if ($('#selectSupplierID').val() == '') {
+        //        $('.btnOK').prop('disabled', true);
+        //    } else {
+        //        $('.btnOK').prop('disabled', false);
+        //    }
+
+        //});
+
+        //debugger
+        //$('#selectSupplierID').val('').trigger('change');
+
+
+
+
+        $('#RatingSuppliers').change(function () {
+            debugger
+            var cid = $("#RatingSuppliers option:selected").val();
+            if (cid != "") {
+                $("#ratings").find('tr').removeClass('active');
+                var oldrec = $("#selectedCid").closest('tr').attr("id", "");
+                //oldrec.attr("id", "");
+                var tableRow = $("#ratings tr td:nth-child(1)").filter(function () {
+                    return $(this).is(":contains('" + cid + "')");
+                }).closest("tr");
+                var row = tableRow.addClass('active');
+
+                row.attr("id", "selectedCid");
+                //$(".active").scrollIntoView();
+                var container = $('tbody');
+                var scrollTo = $('#selectedCid');
+
+                container.animate({
+                    scrollTop: (scrollTo.offset().top - 30) - container.offset().top + container.scrollTop()
+                });
+            }
+
+        });
+
+        $('#popSup').dialog({
+            autoOpen: false,
+            width: 600,
+            height: 350,
+            resizable: false,
+            title: 'Select Supplier',
+            modal: true,
+            open: function (event, ui) {
+
+            }
+        });
+        //$('#container').on("input", ".calcrow", function () {
+        //    var inbound = $(this).closest('tr').find('#Inbound').val();
+        //    var otr = $(this).closest('tr').find('#OTR').val();
+        //    var otd = $(this).closest('tr').find('#OTD').val();
+        //    var pfr = $(this).closest('tr').find('#PFR').val();
+        //    var ri = $(this).closest('tr').find('#RI').val();
+        //    var rp = $(this).closest('tr').find('#RP').val();
+        //    // debugger
+        //    var ppm = Math.round((rp / inbound) * 1000000);
+
+        //    var ipm = ((ri / inbound) * 1000000).toFixed(2);
+        //    var pct = Math.round((otr / otd) * 100);
+
+        //    if (isFinite(ppm)) {
+        //        $(this).closest('tr').find('.Ppm').html(ppm);
+        //    } else {
+        //        //$(this).closest('tr').find('.Ppm').html(ppm);
+        //    }
+        //    if (isFinite(ipm)) {
+        //        $(this).closest('tr').find('.Ipm').html(ipm);
+        //    } else {
+        //        //$(this).closest('tr').find('.Ipm').html(ipm);
+        //    }
+        //    if (isFinite(pct)) {
+        //        $(this).closest('tr').find('.Pct').html(pct);
+        //    } else {
+        //        //$(this).closest('tr').find('.Pct').html(pct);
+        //    }
+
+
+        //});
+        $('#container').on("change", ".calcrow", function () {
+
+            //var inbound = $(this).closest('tr').find('#Inbound').val();
+            //var otr = $(this).closest('tr').find('#OTR').val();
+            //var otd = $(this).closest('tr').find('#OTD').val();
+            //var pfr = $(this).closest('tr').find('#PFR').val();
+            //var ri = $(this).closest('tr').find('#RI').val();
+            //var rp = $(this).closest('tr').find('#RP').val();
+            var rowid = $(this).closest('tr').first().attr('data-RowId');
+
+            var inbound = $('#RatingRecords_' + rowid + '__Inbound_parts').val();
+            var otr =$('#RatingRecords_' + rowid + '__OTR').val();
+            var otd = $('#RatingRecords_' + rowid + '__OTD').val();
+            var pfr = $('#RatingRecords_' + rowid + '__PFR').val();
+            var ri = $(this).closest('tr').find('#RI').val();
+            var rp = $(this).closest('tr').find('#RP').val();
+
+            var ppm = Math.round((rp / inbound) * 1000000);
+            var ipm = ((ri / inbound) * 1000000).toFixed(2);
+            var pct = Math.round((otr / otd) * 100);
+
+            if (isFinite(ppm)) {
+                $(this).closest('tr').find('.Ppm').html(ppm);
+            } else {
+                ppm = 0;
+            }
+            if (isFinite(ipm)) {
+                $(this).closest('tr').find('.Ipm').html(ipm);
+            } else {
+                ipm = 0.00;
+            }
+            if (isFinite(pct)) {
+                $(this).closest('tr').find('.Pct').html(pct);
+            } else {
+                pct = 0;
+            }
+
+            var cid = $('#RatingRecords_' + rowid + '__CID').val();
+            //  var
+            // var cid = $
+            $.ajax({
+                url: '@Url.Action("UpdateRating", "Ratings")',
+                //Passes the content of an input up
+                data: { CID: cid, Inbound: inbound, OTR: otr, OTD: otd, PFR: pfr, RI: ri, RP: rp, PPM: ppm, IPM: ipm, PCT: pct }, //,SiteID:siteId,count:cont
+                contentType: "application/json; charset=utf-8",
+                type: 'GET',
+                cache: false,
+                dataType: 'html',
+                async: false,
+                success: function (data) {
+
+                },
+                error: function (ts) { alert(ts.responseText) }
+            });
+        });
+
+
+
+    });
+    $(document).ajaxComplete(function () {
+
+
+        $('#RatingSuppliers').change(function () {
+
+            var cid = $("#RatingSuppliers option:selected").val();
+            if (cid != "") {
+                $("#ratings").find('tr').removeClass('active');
+                var oldrec = $("#selectedCid").closest('tr').attr("id", "");
+                //oldrec.attr("id", "");
+                var tableRow = $("#ratings tr td:nth-child(1)").filter(function () {
+                    return $(this).is(":contains('" + cid + "')");
+                }).closest("tr");
+                var row = tableRow.addClass('active');
+
+                row.attr("id", "selectedCid");
+                //$(".active").scrollIntoView();
+                var container = $('tbody');
+                var scrollTo = $('#selectedCid');
+
+
+                container.animate({
+                    scrollTop: (scrollTo.offset().top - 30) - container.offset().top + container.scrollTop()
+                });
+
+
+            }
+
+        });
+    });
+
+</script>

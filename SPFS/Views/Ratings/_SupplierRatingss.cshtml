@@ -1,0 +1,80 @@
+﻿@model SPFS.Models.RatingsViewModel
+    @using SPFS.Helpers
+    <table class="fixed_headers">
+   
+    <thead>
+        @*<tr>
+                <th colspan="2"></th>
+                <th colspan="5">Quality</th>
+                <th colspan="4">On Time Delivery</th>
+
+            </tr>*@
+
+        <tr>
+            <th>@Html.DisplayNameFor(model => model.RatingRecords.First().SupplierName)</th>
+            <th>Total Spend (US$)</th>
+            <th rowspan="2"> @Html.DisplayNameFor(model => model.RatingRecords.First().Reject_incident_count)</th>
+            <th rowspan="2"> @Html.DisplayNameFor(model => model.RatingRecords.First().Reject_parts_count)</th>
+            <th rowspan="2"> @Html.DisplayNameFor(model => model.RatingRecords.First().Inbound_parts)</th>
+            <th rowspan="2"> @Html.DisplayNameFor(model => model.RatingRecords.First().PPM)</th>
+            <th rowspan="2"> @Html.DisplayNameFor(model => model.RatingRecords.First().IPM)</th>
+            <th rowspan="2"> @Html.DisplayNameFor(model => model.RatingRecords.First().OTR)</th>
+            <th rowspan="2"> @Html.DisplayNameFor(model => model.RatingRecords.First().OTD)</th>
+            <th rowspan="2"> @Html.DisplayNameFor(model => model.RatingRecords.First().PCT)</th>
+            <th rowspan="2"> @Html.DisplayNameFor(model => model.RatingRecords.First().PFR)</th>
+
+        </tr>
+        <tr>
+            <th>@Html.DisplayNameFor(model => model.RatingRecords.First().CID)</th>
+            <th>@Html.DisplayNameFor(model => model.RatingRecords.First().DUNS)</th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+           
+            
+        </tr>
+
+    </thead>
+    <tbody>
+        @foreach (var item in Model.RatingRecords)
+        {
+            <tr id="part1">
+                <td>
+                    <div class="form-horizontal">
+                        @item.SupplierName.SplitCamelCase().Left(22)
+                        <span class="glyphicon glyphicon-info-sign alert-warning" style="float:right" title="@item.SupplierName"></span>
+                    </div>
+                
+                
+             </td>
+                <td><font style="color:green">$</font>@Html.DisplayFor(modelItem => item.Total_Spend)</td>
+                <td rowspan="2">@Html.DisplayFor(modelItem => item.Reject_incident_count)</td>
+                <td rowspan="2">@Html.DisplayFor(modelItem => item.Reject_parts_count)</td>
+                <td rowspan = "2">                                         
+                @Html.TextBoxFor(modelItem => item.Inbound_parts,null, new { @class = "form-control", style="width:100%"})</td>
+                @*<td rowspan="2"> @Html.DisplayFor(modelItem => item.Inbound_parts)</td>*@
+                <td rowspan="2"> @Html.DisplayFor(modelItem => item.PPM)</td>
+                <td rowspan="2">@Html.DisplayFor(modelItem => item.IPM)</td>
+                @*<td rowspan="2">@Html.DisplayFor(modelItem => item.OTR)</td>
+                <td rowspan="2"> @Html.DisplayFor(modelItem => item.OTD)</td>*@
+                <td rowspan="2">@Html.TextBoxFor(modelItem => item.OTR, null, new { @class = "form-control", style = "width:100%" })</td>
+                <td rowspan="2"> @Html.TextBoxFor(modelItem => item.OTD, null, new { @class = "form-control", style = "width:100%" })</td>
+                <td rowspan="2"> @Html.DisplayFor(modelItem => item.PCT)</td>
+                @*<td rowspan="2"> @Html.DisplayFor(modelItem => item.PFR)</td>*@
+                <td rowspan="2"> @Html.TextBoxFor(modelItem => item.PFR, null, new { @class = "form-control", style = "width:100%" })</td>
+
+                </tr>
+            <tr id="part2">
+                <td>@Html.DisplayFor(modelItem => item.CID)</td>
+                <td>@Html.DisplayFor(modelItem => item.DUNS)</td>
+
+
+            </tr>
+        }
+
+
+    </tbody>
+</table>
+
+

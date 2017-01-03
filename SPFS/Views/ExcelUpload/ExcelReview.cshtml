@@ -1,0 +1,321 @@
+﻿
+
+@model SPFS.Models.ExcelRatingsViewModel
+
+@{
+    var count = ViewBag.Count;
+    if (count > 0)
+    {
+        <script type="text/javascript">
+            $(".Merge").hide();
+        </script>
+
+    }
+    else
+    {
+        <script type="text/javascript">
+            $(".Merge").show();
+            $(".Merge").focus();
+        </script>
+    }
+}
+
+@using (Html.BeginForm())
+{
+    <h2>Uploaded Records</h2>
+    <hr />
+    if (count > 0)
+    {
+    <div class="alert alert-warning" id="ErrorCount" value="@count">
+        <strong>Warning!</strong> there are @count error record(s) in this Upload.
+    </div>
+       <div class="row col-md-12">
+        <div class="pull-right">
+          
+            <a href="@Url.Action("UploadIndex", "ExcelUpload", Model)" class="btn btn-primary btn Merge" style="display: none;" onclick="OnBeginPostBack_Merge(this)">
+                <span class="glyphicon glyphicon-random"></span> Merge
+            </a>
+
+
+            <a href="@Url.Action("ExportData", "ExcelUpload", new { fileName = "SPFS_UploadedFile", Records = Model.RatingRecords })" class="btn btn-primary btn">
+                <span class="glyphicon glyphicon-export"></span> Export
+            </a>
+        </div>
+    </div>
+    <div id="divexcellist" class="row" style="margin-top: 5px; padding-left:25px">
+        @Html.Partial("_ExcelList", Model)
+
+    </div>
+
+        <div class="row col-md-12" id="footerbtns">
+            <div class="pull-right">
+               
+                <a href="@Url.Action("UploadIndex", "ExcelUpload")" class="btn btn-primary btn Merge" style="display: none;" onclick="OnBeginPostBack_Merge(this)">
+                    <span class="glyphicon glyphicon-random"></span> Merge
+                </a>
+
+                <a href="@Url.Action("ExportData", "ExcelUpload", new { fileName = "UploadedFile", Records = Model.RatingRecords })" class="btn btn-primary btn">
+                    <span class="glyphicon glyphicon-export"></span> Export
+                </a>
+            </div>
+        </div>
+        @*<div>@Html.DropDownList("selectSupplierID", ViewBag.Suppliers as IEnumerable<SelectListItem>, "",
+                                                        new { @class = "selectpicker col-md-10", data_live_search = "true", data_size = "10" })
+            </div>*@
+
+        <div id="popSup" title="Search Supplier" style="overflow: auto;">
+
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info" id="Info">
+            <strong>Info!</strong> There are no Primary Validation Errors(CID,DUNS) in this upload. Please proceed by clicking on Merge.
+        </div>
+        <div class="row col-md-12">
+            <div class="pull-right">
+             
+                <a href="@Url.Action("UploadIndex", "ExcelUpload", Model)" class="btn btn-primary btn Merge" onclick="OnBeginPostBack_Merge(this)">
+                    <span class="glyphicon glyphicon-random"></span> Merge
+                </a>
+
+
+                <a href="@Url.Action("ExportData", "ExcelUpload", new { fileName = "SPFS_UploadedFile", Records = Model.RatingRecords })" class="btn btn-primary btn">
+                    <span class="glyphicon glyphicon-export"></span> Export
+                </a>
+            </div>
+        </div>
+    }
+}
+<script type="text/javascript">
+
+   
+    $(function () {
+        //Sorting
+        $(document).on("click", "#btnFilter", function () {
+            debugger
+            var SupName = $('#SupplierID').val();
+            SearchSupplierByName(SupName);
+
+        });
+
+        function SearchSupplierByName(SupName) {
+            $.ajax({
+                url: '@Url.Action("GetSupplierbyName", "ExcelUpload")',
+                //Passes the content of an input up
+                data: { nameString: SupName,errorCheck: true},
+                contentType: "application/json; charset=utf-8",
+                type: 'GET',
+                async: false,
+                cache: true,
+
+                success: function (data) {
+                    $('#selectSupplierID').find('option').remove();
+                    $.each(data, function (i, optionData) {
+                        $('#selectSupplierID').append($('<option></option>').val(optionData.Value).html(optionData.Text));
+                    });
+                }
+            });
+        };
+
+        $('.btnSearch').bind("click", function () {
+            var rowIndex = $(this).attr('data-RowId');
+            rowID = rowIndex;
+
+            $.ajax({
+                url: '@Url.Action("LoadSuppliers", "ExcelUpload")',
+                //Passes the content of an input up
+                data: { errorCheck: true },
+                contentType: "application/json; charset=utf-8",
+                type: 'GET',
+                cache: false,
+                success: function (data) {
+                    $('#popSup').children().remove();
+                    $('#popSup').html(data);
+                }
+            });
+
+            $("#popSup").dialog('option', 'title', 'Select Supplier');
+            $("#popSup").dialog("open");
+        });
+        var Pcount = 0;
+        var Ucount = 0;
+        //$('.btnOK').live("click", function ()
+        $('#popSup').on("click", ".btnOK", function (e) {
+
+
+            var selectedText = $("#selectSupplierID").find("option:selected").text();
+            var selectedValue = $("#selectSupplierID").val();
+
+            $.ajax({
+                url: '@Url.Action("UpdateRecord", "ExcelUpload")',
+                //Passes the content of an input up
+                data: { CID: selectedValue, Name: selectedText, Rowid: rowID },
+                contentType: "application/json; charset=utf-8",
+                type: 'GET',
+                cache: false,
+                //async: false,
+                success: function (data) {
+
+                    var supplierRow = document.getElementById(rowID);
+
+                    //update CID which is the 1st td element
+                    supplierRow.cells[0].innerHTML = data.CID;
+
+                    //update DUNS which is the 2nd td element
+                    supplierRow.cells[1].innerHTML = data.DUNS;
+
+                    var spanstring = '<span class="glyphicon glyphicon-ok fixedClass" id="status">  Fixed</span>'
+
+                    //var spanstring = '<span class="glyphicon glyphicon-ok fixedClass" title="row updated" rel="tooltip" id="status">  Fixed</span>'
+                    //var spanstring = '<h4><span class="label label-success">Success</span></h4>'
+                    supplierRow.cells[7].innerHTML = spanstring;
+
+                    Ucount++;
+                    if (Pcount <= 0) {
+                        var jcount = parseInt($("#ErrorCount").attr('value'), 10);
+                        jcount = jcount - Ucount;
+                        Pcount = jcount;
+                    }
+                    else {
+                        var jcount = Pcount - Ucount;
+                        Pcount = jcount;
+                    }
+
+                    if (jcount > 0) {
+                        $("#ErrorCount").html(" <strong>Warning!</strong> there are " + jcount + " error record(s) in this Upload now.");
+
+
+                    }
+                    else {
+                        $("#ErrorCount").html(" <strong>Success!</strong> All records are fixed Now. Please proceed to merge.");
+                        $("#ErrorCount").removeClass("alert alert-warning").addClass("alert alert-success");
+                        $(".Merge").show();
+                    }
+
+                    $("#popSup").closest('.ui-dialog-content').dialog("close");
+                }
+            });
+
+        });
+        var Rcount=0;
+        $(document).ready(function(){
+               $("#errortable").on('click','.btnRemove',function(){
+                   if (confirm('Are you sure you want to Remove?')) {
+                      // debugger
+                       $(this).closest('tr').remove();
+                       $('#tooltip').remove();
+                       var rowIndex = $(this).attr('data-RowId');
+                       rowID = rowIndex;
+                       $.ajax({
+
+                           url: '@Url.Action("RemoveRecord", "ExcelUpload")',
+                           //Passes the content of an input up
+                           //data: { Rowid: rowID ,SiteID: siteID,Month:month,Year:year },
+                           data: { Rowid: rowID },
+                           contentType: "application/json; charset=utf-8",
+                           type: 'GET',
+                           cache: false,
+                           //async: false,
+                           success: function (data) {
+
+                               //debugger
+                               Rcount++;
+
+                               if (Pcount <= 0) {
+                                   var jcount = parseInt($("#ErrorCount").attr('value'), 10);
+                                   jcount = jcount - Rcount;
+                                   Pcount = jcount;
+                               }
+                               else {
+                                   var jcount = Pcount - Rcount;
+                                   Pcount = jcount;
+                               }
+
+
+                               if (jcount > 0) {
+                                   $("#ErrorCount").html(" <strong>Warning!</strong> there are " + jcount + " error record(s) in this Upload now.");
+
+                               }
+                               else {
+                                   $("#ErrorCount").html(" <strong>Success!</strong> All records are fixed Now. Please proceed to merge.");
+                                   $("#ErrorCount").removeClass("alert alert-warning").addClass("alert alert-success");
+                                   $(".Merge").show();
+                                   $("#divexcellist").remove();
+                                   $("#footerbtns").remove();
+                                   $("#tooltip").remove();
+
+                               }
+
+
+                           }
+                       });
+                   }
+            });
+
+
+
+
+        });
+
+        @*$('.btnRemove').bind("click", function () {
+        //$("#errortable").on('click','.btnRemove',function() {
+            var siteID = @Html.Raw(Json.Encode(Model.SiteID));
+            var month =@Html.Raw(Json.Encode(Model.Month));
+            var year = @Html.Raw(Json.Encode(Model.Year));
+            if (confirm('Are you sure you want to Remove?')) {
+
+                var rowIndex = $(this).attr('data-RowId');
+                rowID = rowIndex;
+                $.ajax({
+                    url: '@Url.Action("RemoveRecord", "ExcelUpload")',
+                    //Passes the content of an input up
+                    //data: { Rowid: rowID ,SiteID: siteID,Month:month,Year:year },
+                    data: { Rowid: rowID },
+                    contentType: "application/json; charset=utf-8",
+                    type: 'GET',
+                    cache: false,
+                    //async: false,
+                    success: function (data) {
+
+
+                        Rcount++;
+
+                        var jcount = parseInt($("#ErrorCount").attr('value'), 10);
+                        jcount = jcount - Rcount;
+
+
+                        if (jcount > 0) {
+                            $("#ErrorCount").html(" <strong>Warning!</strong> there are " + jcount + " error record(s) in this Upload now.");
+
+                        }
+                        else {
+                            $("#ErrorCount").html(" <strong>Success!</strong> All records are fixed Now. Please proceed to merge.");
+                            $("#ErrorCount").removeClass("alert alert-warning").addClass("alert alert-success");
+                            $(".Merge").show();
+                            $("#divexcellist").remove();
+                            $("#footerbtns").remove();
+                            $("#tooltip").remove();
+
+                        }
+
+
+                    }
+                });
+            }
+        });*@
+
+        $('#popSup').dialog({
+            autoOpen: false,
+            width: 600,
+            height: 350,
+            resizable: false,
+            title: 'Select Supplier',
+            modal: true,
+            open: function (event, ui) {
+
+            }
+        });
+
+    })
+</script>

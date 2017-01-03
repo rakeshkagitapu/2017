@@ -1,0 +1,154 @@
+﻿@using SPFS.Helpers
+@model SPFS.Models.RatingsViewModel
+@Scripts.Render("~/bundles/tooltip")
+@{
+    var count = Model.RatingRecords != null ? Model.RatingRecords.Count : 0;
+}
+@*<div class="alert alert-info" id="Count" value="@count">
+        <strong>Info!</strong> there are @count record(s) to rate.
+    </div>*@
+<div class="row col-md-12">
+
+    <div class="col-md-8">
+        <div class="form-group">
+            @Html.Label("Search Supplier :")
+            @Html.DropDownList("RatingSuppliers", ViewBag.RatingSuppliers as IEnumerable<SelectListItem>, "",
+               new { @class = "selectpicker", data_live_search = "true", data_size = "10", data_width = "80%", id = "RatingSuppliers" })
+
+        </div>
+    </div>
+    <div class="alert alert-info col-md-4" id="Count" value="@count" style="padding:7px !important">
+        <strong>Info!</strong> there are @count record(s) to rate.
+    </div>
+</div>
+
+<table class="fixed_headers" id="ratings">
+
+    <thead>
+        @*<tr>
+                <th colspan="2"></th>
+                <th colspan="5">Quality</th>
+                <th colspan="4">On Time Delivery</th>
+
+            </tr>*@
+
+        <tr>
+            <th>@Html.DisplayNameFor(model => model.RatingRecords.First().SupplierName)</th>
+            <th>Total Spend (US$)</th>
+            <th rowspan="2"> @Html.DisplayNameFor(model => model.RatingRecords.First().Reject_incident_count)</th>
+            <th rowspan="2"> @Html.DisplayNameFor(model => model.RatingRecords.First().Reject_parts_count)</th>
+            <th rowspan="2"> @Html.DisplayNameFor(model => model.RatingRecords.First().Inbound_parts)</th>
+            <th rowspan="2"> @Html.DisplayNameFor(model => model.RatingRecords.First().PPM)</th>
+            <th rowspan="2"> @Html.DisplayNameFor(model => model.RatingRecords.First().IPM)</th>
+            <th rowspan="2"> @Html.DisplayNameFor(model => model.RatingRecords.First().OTR)</th>
+            <th rowspan="2"> @Html.DisplayNameFor(model => model.RatingRecords.First().OTD)</th>
+            <th rowspan="2"> @Html.DisplayNameFor(model => model.RatingRecords.First().PCT)</th>
+            <th rowspan="2"> @Html.DisplayNameFor(model => model.RatingRecords.First().PFR)</th>
+
+        </tr>
+        <tr>
+            <th>@Html.DisplayNameFor(model => model.RatingRecords.First().CID)</th>
+            <th>@Html.DisplayNameFor(model => model.RatingRecords.First().DUNS)</th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+
+
+        </tr>
+
+    </thead>
+    <tbody id="container">
+
+        @for (int i = 0; i < Model.RatingRecords.Count; i++)
+        {
+
+            <tr id="part1" data-rowid="@i">
+                <td>
+                    <div class="form-horizontal">
+                        @Model.RatingRecords[i].SupplierName.SplitCamelCase().Left(20)
+                        <span class="glyphicon glyphicon-info-sign alert-warning" style="float:right" title="@Model.RatingRecords[i].SupplierName" rel="tooltip"></span>
+                        @Html.HiddenFor(modelItem => Model.RatingRecords[i].SupplierName)
+                    </div>
+                </td>
+
+                <td>
+                    <font style="color:green">$</font>@Html.DisplayFor(modelItem => Model.RatingRecords[i].Total_Spend)
+                    @Html.HiddenFor(modelItem => Model.RatingRecords[i].Total_Spend)
+                </td>
+
+                <td rowspan="2">
+                    @Html.DisplayFor(modelItem => Model.RatingRecords[i].Reject_incident_count)
+                    @Html.HiddenFor(modelItem => Model.RatingRecords[i].Reject_incident_count, new { @id = "RI" })
+                </td>
+
+                <td rowspan="2">
+                    @Html.DisplayFor(modelItem => Model.RatingRecords[i].Reject_parts_count)
+                    @Html.HiddenFor(modelItem => Model.RatingRecords[i].Reject_parts_count, new { @id = "RP" })
+                </td>
+
+
+                <td rowspan="2">
+                    @Html.TextBoxFor(modelItem => Model.RatingRecords[i].Inbound_parts, null, new { @class = Model.RatingRecords[i].Reject_incident_count > 0 ? "form-control calcrow onlyNumeric NumberGreaterZero" : "form-control calcrow onlyNumeric", maxlength = 10, style = "width:100%" })
+                    @Html.ValidationMessageFor(modelItem => Model.RatingRecords[i].Inbound_parts, "", new { style = "display:none" })
+                </td>
+                @*<td rowspan="2"> @Html.DisplayFor(modelItem => item.Inbound_parts)</td>*@
+
+                <td rowspan="2">
+                    <span class="Ppm">
+                        @Html.DisplayFor(modelItem => Model.RatingRecords[i].PPM)
+                    </span>
+                    @Html.HiddenFor(modelItem => Model.RatingRecords[i].PPM, new { @id = "PPM" })
+                </td>
+
+
+                <td rowspan="2">
+                    <span class="Ipm">
+                        @Html.DisplayFor(modelItem => Model.RatingRecords[i].IPM)
+                    </span>
+                    @Html.HiddenFor(modelItem => Model.RatingRecords[i].IPM, new { @id = "IPM" })
+                </td>
+
+
+                <td rowspan="2">
+                    @Html.TextBoxFor(modelItem => Model.RatingRecords[i].OTR, null, new { @class = Model.RatingRecords[i].Reject_incident_count > 0 ? "form-control calcrow onlyNumeric NumberGreaterZero" : "form-control calcrow onlyNumeric", maxlength = 4, style = "width:100%" })
+                @Html.ValidationMessageFor(modelItem => Model.RatingRecords[i].OTR, "", new { style = "display:none" })
+            </td>
+
+
+            <td rowspan="2">
+                @Html.TextBoxFor(modelItem => Model.RatingRecords[i].OTD, null, new { @class = Model.RatingRecords[i].Reject_incident_count > 0 ? "form-control calcrow onlyNumeric NumberGreaterZero" : "form-control calcrow onlyNumeric", maxlength = 4, style = "width:100%" })
+                @Html.ValidationMessageFor(modelItem => Model.RatingRecords[i].OTD, "", new { style = "display:none" })
+            </td>
+
+            <td rowspan="2">
+                <span class="Pct">
+                    @Html.DisplayFor(modelItem => Model.RatingRecords[i].PCT)
+                </span>
+                @Html.HiddenFor(modelItem => Model.RatingRecords[i].PCT, new { @id = "PCT" })
+            </td>
+
+            <td rowspan="2"> @Html.TextBoxFor(modelItem => Model.RatingRecords[i].PFR, null, new { @class = Model.RatingRecords[i].Reject_incident_count > 0 ? "form-control calcrow onlyNumeric NumberGreaterZero" : "form-control calcrow onlyNumeric", maxlength = 4, style = "width:60%" })</td>
+            @Html.ValidationMessageFor(modelItem => Model.RatingRecords[i].PFR, "", new { style = "display:none" })
+        </tr>
+
+            <tr id="part2" data-rowid="@i">
+                <td>
+                    @Html.DisplayFor(modelItem => Model.RatingRecords[i].CID)
+                    @Html.HiddenFor(modelItem => Model.RatingRecords[i].CID)
+                </td>
+
+
+                <td>
+                    @Html.DisplayFor(modelItem => Model.RatingRecords[i].DUNS)
+                    @Html.HiddenFor(modelItem => Model.RatingRecords[i].DUNS)
+                </td>
+
+            </tr>
+        }
+
+
+    </tbody>
+</table>
+
+

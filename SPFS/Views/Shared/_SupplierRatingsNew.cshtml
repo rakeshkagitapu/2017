@@ -1,0 +1,49 @@
+﻿
+@model SPFS.Models.RatingsViewModel
+@using SPFS.Helpers
+@{
+    
+}
+<table class="fixed_headers">
+
+    <thead>
+        @*<tr>
+                <th colspan="2"></th>
+                <th colspan="5">Quality</th>
+                <th colspan="4">On Time Delivery</th>
+
+            </tr>*@
+
+        <tr>
+            <th>@Html.DisplayNameFor(model => model.RatingRecords.First().SupplierName)</th>
+            <th>Total Spend (US$)</th>
+            <th rowspan="2"> @Html.DisplayNameFor(model => model.RatingRecords.First().Reject_incident_count)</th>
+            <th rowspan="2"> @Html.DisplayNameFor(model => model.RatingRecords.First().Reject_parts_count)</th>
+            <th rowspan="2"> @Html.DisplayNameFor(model => model.RatingRecords.First().Inbound_parts)</th>
+            <th rowspan="2"> @Html.DisplayNameFor(model => model.RatingRecords.First().PPM)</th>
+            <th rowspan="2"> @Html.DisplayNameFor(model => model.RatingRecords.First().IPM)</th>
+            <th rowspan="2"> @Html.DisplayNameFor(model => model.RatingRecords.First().OTR)</th>
+            <th rowspan="2"> @Html.DisplayNameFor(model => model.RatingRecords.First().OTD)</th>
+            <th rowspan="2"> @Html.DisplayNameFor(model => model.RatingRecords.First().PCT)</th>
+            <th rowspan="2"> @Html.DisplayNameFor(model => model.RatingRecords.First().PFR)</th>
+
+        </tr>
+        <tr>
+            <th>@Html.DisplayNameFor(model => model.RatingRecords.First().CID)</th>
+            <th>@Html.DisplayNameFor(model => model.RatingRecords.First().DUNS)</th>
+            <th></th>
+            <th></th>
+            <th></th>
+            <th></th>
+
+
+        </tr>
+
+    </thead>
+    <tbody>
+
+      
+
+
+    </tbody>
+</table>

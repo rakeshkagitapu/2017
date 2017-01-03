@@ -1,0 +1,78 @@
+﻿
+<style type="text/css">
+     .mt {
+        padding: 0px;
+        font-family: Tahoma, sans-serif;
+        font-size: 0.9em;
+    }
+
+  
+    table.mt {
+        border-width: 1px;
+        border-spacing: 0px;
+        border-style: solid;
+        border-color: #cfcfcf;
+        border-collapse: collapse;
+        background-color: transparent;
+    }
+
+        table.mt th {
+            border-width: 1px;
+            padding: 0px;
+            border-style: solid;
+            border-color: #cfcfcf;
+            white-space: normal;
+            background-color: #afafaf;
+            text-align: center;
+        }
+
+        table.mt td {
+            border-width: 1px;
+            padding: 1px;
+            border-style: solid;
+            border-color: #cfcfcf;
+            text-align: center;
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+</style>
+
+        <table id="dataTable" style="width:100%" class="mt">
+            <thead>
+                <tr>
+                    <th colspan="2" rowspan="2" style="width:17%">Supplier Name</th>
+                    <th colspan="1" rowspan="2" style="width:8%">Total Spend (US$) </th>
+                    <th colspan="5">Quality</th>
+                    <th colspan="4">On Time Delivery</th>
+                </tr>
+
+                <tr>
+                    
+                    <th rowspan="2" style="width:8%"> Reject Incidents</th>
+                    <th rowspan="2" style="width:8%"> Reject Parts</th>
+                    <th rowspan="2" style="width:8%">Inbound Parts</th>
+                    <th rowspan="2" style="width:8%">PPMmm</th>
+                    <th rowspan="2" style="width:8%">IPMmm</th>
+                    <th rowspan="2" style="width:8%">QTY Received</th>
+                    <th rowspan="2" style="width:8%">QTY Due</th>
+                    <th rowspan="2" style="width:8%"> PCT</th>
+                    <th rowspan="2" style="width:8%"> PFR</th>
+
+                </tr>
+                <tr>
+                    <th colspan="2">CID</th>
+                    <th colspan="1">DUNS</th>
+
+
+                </tr>
+
+            </thead>
+           
+        </table>
+        <p>Bottom Content</p>
+   
+    
+<script src="~/Scripts/fxheader2.js"></script>
+    <script type="text/javascript">
+          fxheaderInit('dataTable',300);
+    </script>
