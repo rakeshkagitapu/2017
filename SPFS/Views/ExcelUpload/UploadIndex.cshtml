@@ -1,7 +1,7 @@
 ﻿@model SPFS.Models.RatingsViewModel
 
 @{
-    ViewBag.Title = "Uplaoded Ratings";
+    ViewBag.Title = "Uploaded Ratings";
     var count = Model.RatingRecords != null ? Model.RatingRecords.Count : 0;
 
 
@@ -18,7 +18,7 @@
     @Html.HiddenFor(m => m.SiteName)
     @Html.Hidden("noOfRecords", @count)
     <h2>Ratings Page -Upload</h2>
-    <hr />
+    <hr style="margin-top:10px !important; margin-bottom:10px !important;" />
     <div class="row col-md-12" style="padding-top:15px">
         <div class="col-md-6">
             <div class="form-group">
@@ -49,14 +49,16 @@
 
     </div>
 
-    <hr />
+    <hr style="margin-top:10px !important; margin-bottom:10px !important;" />
     @*<div class="alert alert-warning alert-dismissible col-md-12" role="alert" style="padding-top: 1px;">
         <span class="glyphicon  glyphicon-info-sign"></span><strong>Errors!</strong> @Html.ValidationSummary()
     </div>*@
 
-    if (count > 0)
-    {
-
+if (count > 0)
+{
+    <div class="alert alert-danger alert-dismissible col-md-12" role="alert" style="padding: 2px;margin-bottom: 5px !important; display:none;" id="ratingserror">
+        <span class="glyphicon  glyphicon-warning-sign"></span><strong>  Errors!</strong> Please fill all highlighted cells
+    </div>
         <div id="output" class="col-md-12">
             @Html.Partial("_SupplierRatings", Model)
         </div>
@@ -74,7 +76,7 @@
                 <a href="@Url.Action("Index","Home")" class="btn btn-danger" onclick="return confirm('Are you sure, all data will be lost')">
                     <span class="glyphicon glyphicon-remove"></span> Cancel
                 </a>
-                <button type="button" id="btnSave" class="btn btn-primary">
+                <button type="button" id="btnSave" class="btn btn-primary" onclick="return confirmSave();">
                     <span class="glyphicon glyphicon-floppy-save"></span> Save
 
                 </button>
@@ -99,124 +101,42 @@
         <div id="popSup" title="Search Supplier" style="overflow: auto;">
 
         </div>
-
+        <div id="dlgsve" class="panel panel-default text-center" style="background-color: rgba(229, 245, 250, 0.701961); color: rgb(4, 135, 196); margin: 0; border-color: rgb(183, 225, 240);">
+            <div class="panel-body">
+                <h4>
+                    <span class="glyphicon glyphicon-floppy-save" style="top: 3px;"></span>
+                    <span style="padding-left: 4px;">Saving...</span>
+                </h4>
+            </div>
+        </div>
     }
 }
 <script type="text/javascript">
-    $(document).ready(function () {
 
-        $('#btnSave').click(function () {
+    function confirmSave() {
             
-            ///** Create div element for delete confirmation dialog*/
-            //var dynamicDialog = $('<div id="confirmBox">'+
-            //'<span class="ui-icon ui-icon-alert" style="float:left; margin:0 7px 20px 0;">'+
-            //'</span>Are you sure you want to save, all records that have no inbound quantity will be ommited?</div>');
-        
-            var Records = [];
-            var CID, Inbound, OTR, OTD, PFR;
-            var len = ($('#container tr').length)/2;
-            for (var i = 0; i < len; i += 1) {
-
-                CID =  $('#RatingRecords_' + i + '__CID').val();//parseInt($('#container tr')[i + 1].cells['0'].innerText, 10);
-                Inbound = $('#RatingRecords_' + i + '__Inbound_parts').val();
-                OTR = $('#RatingRecords_' + i + '__OTR').val();
-                OTD = $('#RatingRecords_' + i + '__OTD').val();
-                PFR = $('#RatingRecords_' + i + '__PFR').val();
-
-                if (isFinite(Inbound)) {
-
-                } else {
-                    Inbound = 0;
-                }
-                if (isFinite(OTR)) {
-
-                } else {
-                    OTR = 0;
-                }
-                if (isFinite(OTD)) {
-
-                } else {
-                    OTD = 0;
-                }
-                if (isFinite(PFR)) {
-                } else {
-                    PFR = 0;
-                }
-                if (Inbound > 0) {
-                    Records.push({ CID: CID, Inbound_parts: Inbound, OTR: OTR, OTD: OTD, PFR: PFR })
-                }
-            }
-
-            var siteID = @Html.Raw(Json.Encode(Model.SiteID));
-            var month =@Html.Raw(Json.Encode(Model.Month));
-            var year = @Html.Raw(Json.Encode(Model.Year));
-
-            @*var CIDarray =[];
-            var RateSuppliers = @Html.Raw(Json.Encode(ViewBag.RatingSuppliers));
-
-            for( i = 0; i < RateSuppliers.length; i++)
+        if(confirm('Are you sure you want to save, all records that have no inbound quantity will be ommited?'))
+        {
+            var divObj= $('#dlgsve');
+            divObj.dialog('open');
+            //$('#dlgmodal span').text('Saving Records...');
+              
+            if($('#ExcelUpload').valid())
             {
-                CIDarray.push(RateSuppliers[i].Value);
-            }*@
-
-            if (Records.length > 0) {
-                //dynamicDialog.dialog({
-                //    title : "Are you sure?",
-                //    closeOnEscape: true,
-                //    modal : true,
-        
-                //    buttons : 
-                //             [{
-                //                 text : "Yes",
-                //                 click : function() {
-                //                     $(this).dialog("close");
-                //                     var height = $(window).height();
-                //                     //Change Overlay Height
-                //                     $(this).css('height',height);
-                if (confirm('Are you sure you want to save, all records that have no inbound quantity will be ommited?')) {
-                    debugger
-                    $("#dlgmodal").dialog('open');
-                    $('#dlgmodal span').text('Saving Records...');
-                    $.ajax({
-                        url: '@Url.Action("SaveRatings", "ExcelUpload")',
-                        data:  JSON.stringify({ 'SavedRecords': Records,SiteID: siteID, Month: month, Year:year}), //,CIDArray:CIDarray}),
-                        traditional: true,
-                        contentType: "application/json; charset=utf-8",
-                        type: 'POST',
-                        cache: false,
-                        async: false,
-                        success: function (data) {
-
-
-                        },
-                        complete: function (jqXHR, textStatus, errorThrown) {
-                            $("#dlgmodal").closest('.ui-dialog-content').dialog("close");
-                            window.location.href = "@Html.Raw(@Url.Action("SavedResults", "ExcelUpload", new { @SiteID= @Html.Raw(Json.Encode(Model.SiteID)), @Year = @Html.Raw(Json.Encode(Model.Year)), @Month= @Html.Raw(Json.Encode(Model.Month))}))";
-                        },
-                        error:function(e)
-                        {
-                            alert("Error ! Saving records "+ e);
-                        }
-
-                    });
-                }
-                //             },
-                //             {
-                //                 text : "No",
-                //                 click : function() {
-                //                     $(this).dialog("close");
-                //                 }
-                //             }]
-                //});
+                SaveRecords();
             }
-        else {
-                alert('No rows to save');
+            else
+            {
+                $('#ratingserror').show();     
+                $("#dlgsve").closest('.ui-dialog-content').dialog("close");
+            }
         }
+            
+    }
 
-        });
-    $('#btnSubmit').click(function () {
-        debugger;
-
+    function SaveRecords() {
+            
+                   
         var Records = [];
         var CID, Inbound, OTR, OTD, PFR;
         var len = ($('#container tr').length)/2;
@@ -251,11 +171,105 @@
                 Records.push({ CID: CID, Inbound_parts: Inbound, OTR: OTR, OTD: OTD, PFR: PFR })
             }
         }
-           
+
         var siteID = @Html.Raw(Json.Encode(Model.SiteID));
         var month =@Html.Raw(Json.Encode(Model.Month));
         var year = @Html.Raw(Json.Encode(Model.Year));
-        debugger
+
+          @*var CIDarray =[];
+        var RateSuppliers = @Html.Raw(Json.Encode(ViewBag.RatingSuppliers));
+
+        for( i = 0; i < RateSuppliers.length; i++)
+        {
+            CIDarray.push(RateSuppliers[i].Value);
+        }*@
+
+        if (Records.length > 0) {
+               
+            if (confirm('Are you sure you want to save, all records that have no inbound quantity will be ommited?')) {
+                //debugger
+                $("#dlgmodal").dialog('open');
+                $('#dlgmodal span').text('Saving Records...');
+                $.ajax({
+                    url: '@Url.Action("SaveRatings", "ExcelUpload")',
+                    data:  JSON.stringify({ 'SavedRecords': Records,SiteID: siteID, Month: month, Year:year}), //,CIDArray:CIDarray}),
+                    traditional: true,
+                    contentType: "application/json; charset=utf-8",
+                    type: 'POST',
+                    cache: false,
+                    async: false,
+                    success: function (data) {
+
+
+                    },
+                    complete: function (jqXHR, textStatus, errorThrown) {
+                        $("#dlgmodal").closest('.ui-dialog-content').dialog("close");
+                        window.location.href = "@Html.Raw(@Url.Action("SavedResults", "ExcelUpload", new { @SiteID= @Html.Raw(Json.Encode(Model.SiteID)), @Year = @Html.Raw(Json.Encode(Model.Year)), @Month= @Html.Raw(Json.Encode(Model.Month))}))";
+                    },
+                    error:function(e)
+                    {
+                        alert("Error ! Saving records "+ e);
+                    }
+
+                });
+            }
+                
+        }
+    else {
+              alert('No rows to save');
+    }
+
+    }
+    $(document).ready(function () {
+
+        $('#dlgsve').hide();
+    $('#btnSubmit').click(function () {
+        //debugger;
+        var datacount=0;
+        var Records = [];
+        var CID, Inbound, OTR, OTD, PFR;
+        var len = ($('#container tr').length)/2;
+        for (var i = 0; i < len; i += 1) {
+
+            CID =  $('#RatingRecords_' + i + '__CID').val();//parseInt($('#container tr')[i + 1].cells['0'].innerText, 10);
+            Inbound = $('#RatingRecords_' + i + '__Inbound_parts').val();
+            OTR = $('#RatingRecords_' + i + '__OTR').val();
+            OTD = $('#RatingRecords_' + i + '__OTD').val();
+            PFR = $('#RatingRecords_' + i + '__PFR').val();
+
+            if (isFinite(Inbound)) {
+
+            } else {
+                Inbound = 0;
+            }
+            if (isFinite(OTR)) {
+
+            } else {
+                OTR = 0;
+            }
+            if (isFinite(OTD)) {
+
+            } else {
+                OTD = 0;
+            }
+            if (isFinite(PFR)) {
+            } else {
+                PFR = 0;
+            }
+            if(Inbound >0)
+            {
+                datacount +=1;
+            }
+            if ((Inbound > 0) && (OTR > 0) && (OTD > 0)) {
+                Records.push({ CID: CID, Inbound_parts: Inbound, OTR: OTR, OTD: OTD, PFR: PFR })
+            }
+        }
+        
+        var submittedCount = Records.length;
+        var siteID = @Html.Raw(Json.Encode(Model.SiteID));
+        var month =@Html.Raw(Json.Encode(Model.Month));
+        var year = @Html.Raw(Json.Encode(Model.Year));
+        //debugger
         if (Records.length > 0) {
             $("#dlgmodal").dialog('open');
             $('#dlgmodal span').text('Submitting Records...');
@@ -269,11 +283,24 @@
                 cache: false,
                 async: false,
                 success: function (data) {
-
-                },
-                complete: function (jqXHR, textStatus, errorThrown) {
-
                     $("#dlgmodal").closest('.ui-dialog-content').dialog("close");
+
+                    var link = '@Url.Action("Summary", "ExcelUpload", new { SiteID= @Html.Raw(Json.Encode(Model.SiteID)), Year = @Html.Raw(Json.Encode(Model.Year)),
+                    Month = @Html.Raw(Json.Encode(Model.Month)), SubmittedCount= "-1",RowCount="-2",SavedCount="-3"})';
+
+                    link=link.replace("-1",this.SubmittedCount).replace("-2",this.RowCount).replace("-3",this.DataCount);
+                        
+                window.location.href = link;
+                }
+                //,
+                //complete: function (jqXHR, textStatus, errorThrown) {
+
+                //   $("#dlgmodal").closest('.ui-dialog-content').dialog("close");
+                //}
+                ,  
+                error:function(e)
+                {
+                    alert("Error ! Saving records "+ e);
                 }
             });
 
@@ -294,7 +321,7 @@
 
         //Sorting
         $(document).on("click", "#btnFilter", function () {
-            debugger
+            //debugger
             var SupName = $('#SupplierID').val();
             SearchSupplierByName(SupName);
 
@@ -405,20 +432,20 @@
             }
         });
 
-        $('#selectSupplierID').change(function () {
-            //debugger
-            if ($('#selectSupplierID').val() == '') {
-                $('.btnOK').prop('disabled', true);
-            } else {
-                $('.btnOK').prop('disabled', false);
-            }
+        //$('#selectSupplierID').change(function () {
+        //    //debugger
+        //    if ($('#selectSupplierID').val() == '') {
+        //        $('.btnOK').prop('disabled', true);
+        //    } else {
+        //        $('.btnOK').prop('disabled', false);
+        //    }
 
-        });
-        $('#selectSupplierID').val('').trigger('change');
+        //});
+        //$('#selectSupplierID').val('').trigger('change');
 
 
         $('#RatingSuppliers').change(function () {
-            debugger
+           
             var cid = $("#RatingSuppliers option:selected").val();
             if (cid != "") {
                 $("#ratings").find('tr').removeClass('active');
@@ -471,6 +498,19 @@
 
             }
         });
+        $("#dlgsve").dialog({
+            autoOpen: false,
+            resizable: false,
+            width: "auto",
+            height: "auto",
+            show: { effect: 'drop', direction: "up" },
+            modal: true,
+            draggable: true,
+            open: function (event, ui) {
+                $(".ui-dialog-titlebar").hide();
+                $(".ui-dialog-titlebar-close").hide();
+            }
+        });
 
         //$('#container').on("input", ".calcrow", function ()
         // {
@@ -504,7 +544,7 @@
           
            
         //});
-        $('#container').on("change", ".calcrow", function () {
+        $(document).on("change", ".calcrow", function () {
             //debugger
             var rowid = $(this).closest('tr').first().attr('data-RowId');
 
@@ -518,7 +558,23 @@
             var ppm = Math.round((rp / inbound) * 1000000);
             var ipm = ((ri / inbound) * 1000000).toFixed(2);
             var pct = Math.round((otr / otd) * 100);
+                                  
+            if (isFinite(inbound)) {
+                
+            } else {
+                inbound=0;
+            }
 
+            if (isFinite(otr)) {
+               
+            } else {
+                otr = 0;
+            }
+            if (isFinite(otd)) {
+                
+            } else {
+                otd = 0;
+            }
             if (isFinite(ppm)) {
                 $(this).closest('tr').find('.Ppm').html(ppm);
             } else {
@@ -533,6 +589,11 @@
                 $(this).closest('tr').find('.Pct').html(pct);
             } else {
                 pct = 0;
+            }
+          
+            if(parseInt(pct,10)>100)
+            {
+                $(this).closest('tr').find('.Pct').addClass('yellowClass');
             }
              
            
@@ -555,7 +616,9 @@
             });
         });
 
-
+        $(document).on("input", ".calcrow", function () {
+            $("#btnSubmit").addClass('disabled');
+        });
     });
     $(document).ajaxComplete(function () {
 

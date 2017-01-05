@@ -460,12 +460,7 @@ table .header-fixed {
     display: none;
 }
 
-/*#endregion oldresults*/
-.errorBorderClass
-{
-background: #FEF1EC;
-    border: 1px solid #CD0A0A;
-}
+
 /*#region oldresults*/
 .oldfixed_headers tr:nth-of-type(n) td {
     border-bottom: 1px solid #1398d0;
@@ -598,4 +593,30 @@ background: #FEF1EC;
         width: 100%;
         height: 520px;
     }
+
+/*#endregion oldresults*/
+.errorBorderClass
+{
+background: #FEF1EC;
+    border: 1px solid #CD0A0A;
+}
+.yellowClass {
+    background: yellow !important;
+}
+.badge-info {
+  background-color: #1398d0;
+  font-size: 15px !important;
+}
+.badge-info:hover {
+  background-color: #fff;
+  color:#1398d0;
+  font-size: 15px !important;
+}
+.pnl{
+   color:#1398d0 !important;
+}
+.pnlbg{
+   background-color:#1398d0;
+   color: #fff !important;
+}
 

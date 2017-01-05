@@ -382,10 +382,13 @@ namespace SPFS.Controllers
                 using (Repository Rep = new Repository())
                 {
                     CurrentRecords = ProdRecords(ratingModel, CheckingDate, Rep);
+                    StagingRecords = StageRecords(ratingModel, CheckingDate, Rep);
                     int CurrentCount = CurrentRecords != null ? CurrentRecords.Count : 0;
+                    int StageCount = StagingRecords != null ? StagingRecords.Count : 0;
+
                     if (CurrentCount <= 0)
                     {
-                        StagingRecords = StageRecords(ratingModel, CheckingDate, Rep);
+                        
 
                         if (StagingRecords.Count > 0)
                         {
@@ -465,15 +468,31 @@ namespace SPFS.Controllers
                     }
                     else
                     {
-                        //data exists for you and any changes will overwrite existing data. Press clear to stop editing submittedratings
-                        ratingModel.IsAlert = true;
-                        ratingModel.IsCurrentRatings = true;
-                        ViewBag.alertmsg = "Data exists and has been <strong>Submitted</strong> for this rating period. Do you wish to <strong>Upload</strong> again and any overlay previously <strong>Submitted</strong> ratings?";
-                        TempData["SearchedResults"] = ratingModel;
-                        ratingModel.ShowResult = false;
-                        ratingModel.EditMode = false;
-                        CreateListViewBags();
-                        return View("Index", ratingModel);
+                        if (StageCount <= 0)
+                        {
+                            //data exists for you and any changes will overwrite existing data. Press clear to stop editing submittedratings
+                            ratingModel.IsAlert = true;
+                            ratingModel.IsCurrentRatings = true;
+
+                            ViewBag.alertmsg = "Data exists and has been <strong>Submitted</strong> for this rating period. Do you wish to <strong>Upload</strong> again and any overlay previously <strong>Submitted</strong> ratings?";
+                            TempData["SearchedResults"] = ratingModel;
+                            ratingModel.ShowResult = false;
+                            ratingModel.EditMode = false;
+                            CreateListViewBags();
+                            return View("Index", ratingModel);
+                        }
+                        else
+                        {
+                            ratingModel.IsAlert = true;
+                            ratingModel.IsCurrentRatings = true;
+                            ratingModel.IsStagingRatings = true;
+                            ViewBag.alertmsg = "Data exists and has been <strong>Submitted</strong> and some has <strong> Saved</strong> for this rating period. Do you wish to <strong>Upload</strong> again and any overlay previously <strong>Submitted</strong> ratings?";
+                            TempData["SearchedResults"] = ratingModel;
+                            ratingModel.ShowResult = false;
+                            ratingModel.EditMode = false;
+                            CreateListViewBags();
+                            return View("Index", ratingModel);
+                        }
                     }
                 }
 
@@ -769,7 +788,7 @@ namespace SPFS.Controllers
                            Reject_incident_count = spend.Reject_incident_count,
                            Reject_parts_count = spend.Reject_parts_count,
                            SupplierName = sup.Name,
-                           DUNS = sup.Duns.Replace("\0", "").Trim()
+                           DUNS = sup.Duns
 
                        }).FirstOrDefault();
 
@@ -787,11 +806,12 @@ namespace SPFS.Controllers
                                Reject_incident_count = 0,
                                Reject_parts_count = 0,
                                SupplierName = sup.Name,
-                               DUNS = sup.Duns.Replace("\0", "").Trim()
+                               DUNS = sup.Duns
 
                            }).FirstOrDefault();
                 }
             }
+            Rec.DUNS = Rec.DUNS.Replace("\0", "").Trim();
             return Rec;
         }
 
@@ -1039,36 +1059,36 @@ namespace SPFS.Controllers
 
         }
 
-        [HttpPost]
-        [MultipleSubmitAttribute(Name = "action", Argument = "SaveData")]
-        public ActionResult SaveData(RatingsViewModel ratingModel)
-        {
+        //[HttpPost]
+        //[MultipleSubmitAttribute(Name = "action", Argument = "SaveData")]
+        //public ActionResult SaveData(RatingsViewModel ratingModel)
+        //{
             
-            if (true)
-            {
+        //    if (true)
+        //    {
                 
-                ModelState.AddModelError("", "error");
-            }
+        //        ModelState.AddModelError("", "error");
+        //    }
 
-            if (ModelState.IsValid)
-            {
-            }
+        //    if (ModelState.IsValid)
+        //    {
+        //    }
 
-            CreateListViewBags();
-            return View("UploadIndex", ratingModel);
+        //    CreateListViewBags();
+        //    return View("UploadIndex", ratingModel);
 
-        }
+        //}
 
-        [HttpPost]
-        [MultipleSubmitAttribute(Name = "action", Argument = "SubmitData")]
-        public ActionResult SubmitData(RatingsViewModel ratingModel)
-        {
+        //[HttpPost]
+        //[MultipleSubmitAttribute(Name = "action", Argument = "SubmitData")]
+        //public ActionResult SubmitData(RatingsViewModel ratingModel)
+        //{
 
 
 
-            return View("UploadIndex", ratingModel);
+        //    return View("UploadIndex", ratingModel);
 
-        }
+        //}
 
 
         public ActionResult SaveRatings(List<SubmitRecord> SavedRecords, int SiteID, int Month, int Year) //,List<int> CIDArray)
@@ -1111,7 +1131,7 @@ namespace SPFS.Controllers
                 }
                 if (NewRecords.Count > 0)
                 {
-                    var convertedrecords = ConvertViewModelsToModels(NewRecords, SiteID, Year, Month);
+                    var convertedrecords = ConvertViewModelsToStageModels(NewRecords, SiteID, Year, Month);
 
                     repository.Context.SPFS_STAGING_SUPPLIER_RATINGS.AddRange(convertedrecords);
                     repository.Context.SaveChanges();
@@ -1146,7 +1166,20 @@ namespace SPFS.Controllers
 
 
             }
-                        
+            var unmatch = (from agrr in RatingModel.RatingRecords
+                           where !(ISORecords.Any(i => i.CID == agrr.CID))
+                           select agrr).ToList();
+
+
+            if (unmatch != null)
+            {
+                foreach (var item in unmatch)
+                {
+                    item.SupplierName = GetSupplierDataByCID(item.CID, (int)RatingModel.SiteID).SupplierName;
+                    item.DUNS = GetSupplierDataByCID(item.CID, (int)RatingModel.SiteID).DUNS;
+                }
+                ISORecords.AddRange(unmatch);
+            }
             MergedRecords = ISORecords;
 
             foreach (RatingRecord rec in MergedRecords)
@@ -1184,11 +1217,11 @@ namespace SPFS.Controllers
           
             return ConvertedModel;
         }
-        public static List<SPFS_STAGING_SUPPLIER_RATINGS> ConvertViewModelsToModels(List<SubmitRecord> records, int SiteID, int Year, int Month)
+        public static List<SPFS_STAGING_SUPPLIER_RATINGS> ConvertViewModelsToStageModels(List<SubmitRecord> records, int SiteID, int Year, int Month)
         {
             List<SPFS_STAGING_SUPPLIER_RATINGS> DatabaseRecords = new List<SPFS_STAGING_SUPPLIER_RATINGS>();
             Utilities util = new Utilities();
-           
+
             int CheckingDate = Convert.ToInt32("" + Year + Month.ToString().PadLeft(2, '0'));
             foreach (var item in records)
             {
@@ -1202,10 +1235,10 @@ namespace SPFS.Controllers
                     OTD = item.OTD,
                     PFR = item.PFR,
                     Initial_submission_date = DateTime.Now,
-                    Temp_Upload_ =false,
+                    Temp_Upload_ = false,
                     Interface_flag = false,
                     UserID = util.GetCurrentUser().UserID,
-                    Created_date= DateTime.Now,
+                    Created_date = DateTime.Now,
                     Created_by = util.GetCurrentUser().UserName,
                     Modified_date = DateTime.Now,
                     Modified_by = util.GetCurrentUser().UserName
@@ -1213,6 +1246,121 @@ namespace SPFS.Controllers
                 });
             }
             return DatabaseRecords;
+        }
+        public static List<SPFS_SUPPLIER_RATINGS> ConvertViewModelsToModels(List<SubmitRecord> records, int SiteID, int Year, int Month)
+        {
+            List<SPFS_SUPPLIER_RATINGS> DatabaseRecords = new List<SPFS_SUPPLIER_RATINGS>();
+            Utilities util = new Utilities();
+
+            int CheckingDate = Convert.ToInt32("" + Year + Month.ToString().PadLeft(2, '0'));
+            foreach (var item in records)
+            {
+                DatabaseRecords.Add(new SPFS_SUPPLIER_RATINGS
+                {
+                    Rating_period = CheckingDate,
+                    SiteID = SiteID,
+                    CID = item.CID,
+                    Inbound_parts = item.Inbound_parts,
+                    OTR = item.OTR,
+                    OTD = item.OTD,
+                    PFR = item.PFR,
+                    Initial_submission_date = DateTime.Now,
+                    Temp_Upload_ = true,
+                    Interface_flag = true,
+                    UserID = util.GetCurrentUser().UserID,
+                    Created_date = DateTime.Now,
+                    Created_by = util.GetCurrentUser().UserName,
+                    Modified_date = DateTime.Now,
+                    Modified_by = util.GetCurrentUser().UserName
+
+                });
+            }
+            return DatabaseRecords;
+        }
+        public ActionResult SubmitRatings(List<SubmitRecord> SubmittedRecords, int SiteID, int Month, int Year) //,int SubmittedCount,int RowCount, int DataCount)
+        {
+
+            try
+            {
+                RatingsViewModel ratingModel = new RatingsViewModel { SiteID = SiteID, Month = Month, Year = Year };
+                int CheckingDate = Convert.ToInt32("" + ratingModel.Year + ratingModel.Month.ToString().PadLeft(2, '0'));
+                Utilities util = new Utilities();
+                List<SubmitRecord> NewRecords = new List<SubmitRecord>();
+
+                //ist<SubmitRecord> ExistingStageRecords = new List<SubmitRecord>();
+
+                List<SPFS_STAGING_SUPPLIER_RATINGS> ExistingStageRecords = new List<SPFS_STAGING_SUPPLIER_RATINGS>();
+                using (Repository repository = new Repository())
+
+                {
+                    //stagerecords = repository.Context.SPFS_STAGING_SUPPLIER_RATINGS.Where(s => s.SiteID == SiteID && s.Rating_period == CheckingDate).ToList();
+
+                    foreach (var item in SubmittedRecords)
+                    {
+
+                        if (repository.Context.SPFS_SUPPLIER_RATINGS.Any(s => s.SiteID == SiteID && s.Rating_period == CheckingDate && s.CID == item.CID))
+                        {
+                            var rec = repository.Context.SPFS_SUPPLIER_RATINGS.Where(s => s.SiteID == SiteID && s.Rating_period == CheckingDate && s.CID == item.CID).FirstOrDefault();
+                            if (rec != null)
+                            {
+                                rec.Inbound_parts = item.Inbound_parts;
+                                rec.OTD = item.OTD;
+                                rec.OTR = item.OTR;
+                                rec.PFR = item.PFR;
+                                rec.Interface_flag = true;
+                                rec.UserID = util.GetCurrentUser().UserID;
+                                rec.Modified_date = DateTime.Now;
+                                rec.Modified_by = util.GetCurrentUser().UserName;
+                            }
+                            repository.Context.SaveChanges();
+
+                        }
+                        else
+                        {
+                            NewRecords.Add(item);
+
+                        }
+
+                    }
+                    if (NewRecords.Count > 0)
+                    {
+                        var convertedrecords = ConvertViewModelsToModels(NewRecords, SiteID, Year, Month);
+
+                        repository.Context.SPFS_SUPPLIER_RATINGS.AddRange(convertedrecords);
+                        repository.Context.SaveChanges();
+                    }
+                    foreach (var item in SubmittedRecords)
+                    {
+                        if (repository.Context.SPFS_STAGING_SUPPLIER_RATINGS.Any(s => s.SiteID == SiteID && s.Rating_period == CheckingDate && s.CID == item.CID))
+                        {
+                            var rec = repository.Context.SPFS_STAGING_SUPPLIER_RATINGS.Where(s => s.SiteID == SiteID && s.Rating_period == CheckingDate && s.CID == item.CID).FirstOrDefault();
+                            ExistingStageRecords.Add(rec);
+                        }
+                    }
+                    if (ExistingStageRecords.Count > 0)
+                    {
+                        repository.Context.SPFS_STAGING_SUPPLIER_RATINGS.RemoveRange(ExistingStageRecords);
+
+                        repository.Context.SaveChanges();
+                    }
+                }
+
+
+
+            }
+            catch (Exception ex)
+            {
+                this.Logger.Log(ex.Message, Logging.LoggingLevel.Error, ex, base.User.Identity.Name, "", "", "", "Submitting records", this.ControllerContext.RouteData.Values["controller"].ToString(), this.ControllerContext.RouteData.Values["action"].ToString());
+            }
+
+            //Summary summary = new Summary();
+            //summary.SubmittedCount = SubmittedCount;
+            //summary.StageCount = DataCount;
+            //summary.RowCount = RowCount;
+            return Json(true, JsonRequestBehavior.AllowGet);
+
+
+
         }
         public ActionResult SavedResults(int? SiteID, int Year, int Month)
         {
@@ -1254,6 +1402,23 @@ namespace SPFS.Controllers
             return View("UploadIndex", UpdatedModel);
 
 
+        }
+        public ActionResult Summary(int SiteID, int Month, int Year, int SubmittedCount, int RowCount, int SavedCount)
+        {
+            Summary summary = new Summary();
+            SelectSiteGDIS gdis = selectGDIS.Where(g => g.SiteID.Equals(SiteID)).FirstOrDefault();
+
+            summary.SiteID = SiteID;
+            summary.SiteName = gdis.Name;
+            summary.GDISOrgEntity = gdis.Gdis_org_entity_ID;
+            summary.Month = Month;
+            summary.Year = Year;
+            summary.SubmittedCount = SubmittedCount;
+            summary.RowCount = RowCount;
+            summary.StageCount = SavedCount;
+            ViewBag.Ratings = "Uploaded";
+
+            return View("Summary", summary);
         }
     }
 }

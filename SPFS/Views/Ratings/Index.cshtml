@@ -24,7 +24,7 @@
     @Html.HiddenFor(m => m.EditMode)
     @Html.HiddenFor(m => m.ShowResult)
     <h2>Ratings Page</h2>
-    <hr />
+    <hr style="margin-top:10px !important; margin-bottom:10px !important;" />
     <div class="row col-md-12 header" style="padding-top:15px">
         <div class="col-md-6">
             <div class="form-group">
@@ -49,14 +49,14 @@
                 @Html.LabelFor(model => model.Year, new { @class = "control-label col-md-3" })
                 <div class="input-group">
                     @Html.DropDownListFor(model => model.Year, ViewBag.Years as IEnumerable<SelectListItem>, new { @class = "form-control" })
-                    @*@if (!Model.ShowResult)
-                        {*@
+                    @if (!Model.ShowResult)
+                        {
                     <span class="input-group-btn" title="Search">
                         <button type="submit" value="Search" name="action:Search" class="btn btn-warning" onclick="OnBeginPostBack_Search(this)">
                             <span class="glyphicon glyphicon-search" />
                         </button>
                     </span>
-                    @*}*@
+                    }
                 </div>
 
             </div>
@@ -65,7 +65,7 @@
 
     </div>
 
-    <hr />
+    <hr style="margin-top:10px !important; margin-bottom:10px !important;" />
 
     if (Model.IsAlert)
     {
@@ -76,7 +76,7 @@
             </div>
             <div class="panel-body" id="Alertpanel">
                 @Html.Raw(ViewBag.alertmsg)
-
+                <br />
                 <div class="btn-group pull-right">
                     @if (Model.IsPreviousStagingRatings)
                     {
@@ -86,7 +86,7 @@
                     }
                     @if (Model.IsCurrentRatings)
                     {
-                    <a href="@Url.Action("LoadAlertData", "Ratings", new { SiteID =Model.SiteID,Year=Model.Year,Month=Model.Month, isStaging = false,isLastmonth=false})" class="btn btn-success btn-smd">Yes - Overwrite existing data </a>
+                    <a href="@Url.Action("LoadAlertDataCurrent", "Ratings", new { SiteID = Model.SiteID, Year = Model.Year, Month = Model.Month })" class="btn btn-success btn-smd">Yes - Overwrite existing data </a>
                     <a href="@Url.Action("Index", "Ratings")" class="btn btn-danger btn-md">No - Clear Search criteria</a>
                     }
 
@@ -102,9 +102,13 @@
             if (!ViewData.ModelState.IsValid)
             {
                 <div class="alert alert-warning alert-dismissible col-md-12" role="alert" style="padding-top: 1px;">
-                    <span class="glyphicon  glyphicon-info-sign"></span><strong>Errors!</strong> Please fix below errors
+                    <span class="glyphicon  glyphicon-info-sign"></span><strong>Errors!</strong> Please fill all highlighted cells
                 </div>
             }
+            
+            <div class="alert alert-danger alert-dismissible col-md-12" role="alert" style="padding: 2px;margin-bottom: 5px !important; display:none;" id="ratingserror">
+                <span class="glyphicon  glyphicon-warning-sign"></span><strong>  Errors!</strong> Please fill all highlighted cells
+            </div>
             <div id="output" class="col-md-12">
                 @Html.Partial("_SupplierRatings", Model)
             </div>
@@ -127,7 +131,7 @@
                             <span class="glyphicon glyphicon-remove-sign"></span> Clear
                         </a>*@
                  
-                    <button type="button" id="btnSave" class="btn btn-primary">
+                    <button type="button" id="btnSave" class="btn btn-primary" onclick="return confirmSave();">
                         <span class="glyphicon glyphicon-floppy-save"></span> Save
 
                     </button>
@@ -190,90 +194,235 @@
 
         </div>
     }
-
+    <div id="dlgsve" class="panel panel-default text-center" style="background-color: rgba(229, 245, 250, 0.701961); color: rgb(4, 135, 196); margin: 0; border-color: rgb(183, 225, 240);">
+        <div class="panel-body">
+            <h4>
+                <span class="glyphicon glyphicon-floppy-save" style="top: 3px;"></span>
+                <span style="padding-left: 4px;">Saving...</span>
+            </h4>
+        </div>
+    </div>
+   
 
 }
 
 <script type="text/javascript">
+      function confirmSave() {
+
+          if(confirm('Are you sure you want to save, all records that have no inbound quantity will be ommited?'))
+          {
+                    var divObj= $('#dlgsve');
+                    divObj.dialog('open');
+              //$('#dlgmodal span').text('Saving Records...');
+
+                    if($('#Ratings').valid())
+                    {
+                        SaveRecords();
+
+                    }
+                    else
+                    {
+                        $('#ratingserror').show();
+
+                        $("#dlgsve").closest('.ui-dialog-content').dialog("close");
+                    }
+                }
+
+        }
+
+        //$('#btnSave').click(function () {
+        function SaveRecords() {
+
+                var Records = [];
+                var CID, Inbound, OTR, OTD, PFR;
+                var len = ($('#container tr').length)/2;
+                for (var i = 0; i < len; i += 1) {
+
+                    CID =  $('#RatingRecords_' + i + '__CID').val();//parseInt($('#container tr')[i + 1].cells['0'].innerText, 10);
+                    Inbound = $('#RatingRecords_' + i + '__Inbound_parts').val();
+                    OTR = $('#RatingRecords_' + i + '__OTR').val();
+                    OTD = $('#RatingRecords_' + i + '__OTD').val();
+                    PFR = $('#RatingRecords_' + i + '__PFR').val();
+
+                    if (isFinite(Inbound)) {
+
+                    } else {
+                        Inbound = 0;
+                    }
+                    if (isFinite(OTR)) {
+
+                    } else {
+                        OTR = 0;
+                    }
+                    if (isFinite(OTD)) {
+
+                    } else {
+                        OTD = 0;
+                    }
+                    if (isFinite(PFR)) {
+                    } else {
+                        PFR = 0;
+                    }
+                    if (Inbound > 0) {
+                        Records.push({ CID: CID, Inbound_parts: Inbound, OTR: OTR, OTD: OTD, PFR: PFR })
+                    }
+                }
+
+                var siteID = @Html.Raw(Json.Encode(Model.SiteID));
+                var month =@Html.Raw(Json.Encode(Model.Month));
+                var year = @Html.Raw(Json.Encode(Model.Year));
+
+                if (Records.length > 0) {
+
+
+                        $("#dlgmodal").dialog('open');
+                        $('#dlgmodal span').text('Saving Records...');
+
+                        $.ajax({
+                            url: '@Url.Action("SaveRatings", "Ratings")',
+                            data:  JSON.stringify({ 'SavedRecords': Records,SiteID: siteID, Month: month, Year:year}), //,CIDArray:CIDarray}),
+                            traditional: true,
+                            contentType: "application/json; charset=utf-8",
+                            type: 'POST',
+                            cache: false,
+                            async: false,
+                            success: function (data) {
+
+
+                            },
+                            complete: function (jqXHR, textStatus, errorThrown) {
+                                $("#dlgmodal").closest('.ui-dialog-content').dialog("close");
+                                window.location.href = "@Html.Raw(@Url.Action("SavedResults", "Ratings", new { @SiteID= @Html.Raw(Json.Encode(Model.SiteID)), @Year = @Html.Raw(Json.Encode(Model.Year)), @Month= @Html.Raw(Json.Encode(Model.Month))}))";
+                            },
+                            error:function(e)
+                            {
+                                alert("Error ! Saving records "+ e);
+                            }
+
+                        });
+
+
+                    }
+                //}
+                else {
+                    alert('No rows to save');
+                }
+           // }
+        }
     $(document).ready(function () {
-        $('#btnSave').click(function () {
-            
-            var Records = [];
-            var CID, Inbound, OTR, OTD, PFR;
-            var len = ($('#container tr').length)/2;
-            for (var i = 0; i < len; i += 1) {
+        $('#dlgsve').hide();
+        //$("#dlgmodal").dialog({   // jQuery UI Dialog test
+        //    height: 140,
+        //    modal: true,
+        //    resizable: false
+        //});
 
-                CID =  $('#RatingRecords_' + i + '__CID').val();//parseInt($('#container tr')[i + 1].cells['0'].innerText, 10);
-                Inbound = $('#RatingRecords_' + i + '__Inbound_parts').val();
-                OTR = $('#RatingRecords_' + i + '__OTR').val();
-                OTD = $('#RatingRecords_' + i + '__OTD').val();
-                PFR = $('#RatingRecords_' + i + '__PFR').val();
 
-                if (isFinite(Inbound)) {
 
-                } else {
-                    Inbound = 0;
+        @*function confirmSave() {
+
+                if(confirm('Potential duplicates found.  Are you sure you want to create a new Welfare?'))
+                {
+                    $("#dlgsave").dialog('open');
+                    $('#dlgsave span').text('Saving Records...');
+                    if($('#Ratings').valid())
+                    {
+                        SaveRecords();
+                    }
+                    else
+                    {
+                        $("#dlgsave").closest('.ui-dialog-content').dialog("close");
+                    }
                 }
-                if (isFinite(OTR)) {
 
-                } else {
-                    OTR = 0;
+        }
+
+        //$('#btnSave').click(function () {
+        function SaveRecords() {
+            //if($('#Ratings').valid())
+            //{
+                debugger
+                var Records = [];
+                var CID, Inbound, OTR, OTD, PFR;
+                var len = ($('#container tr').length)/2;
+                for (var i = 0; i < len; i += 1) {
+
+                    CID =  $('#RatingRecords_' + i + '__CID').val();//parseInt($('#container tr')[i + 1].cells['0'].innerText, 10);
+                    Inbound = $('#RatingRecords_' + i + '__Inbound_parts').val();
+                    OTR = $('#RatingRecords_' + i + '__OTR').val();
+                    OTD = $('#RatingRecords_' + i + '__OTD').val();
+                    PFR = $('#RatingRecords_' + i + '__PFR').val();
+
+                    if (isFinite(Inbound)) {
+
+                    } else {
+                        Inbound = 0;
+                    }
+                    if (isFinite(OTR)) {
+
+                    } else {
+                        OTR = 0;
+                    }
+                    if (isFinite(OTD)) {
+
+                    } else {
+                        OTD = 0;
+                    }
+                    if (isFinite(PFR)) {
+                    } else {
+                        PFR = 0;
+                    }
+                    if (Inbound > 0) {
+                        Records.push({ CID: CID, Inbound_parts: Inbound, OTR: OTR, OTD: OTD, PFR: PFR })
+                    }
                 }
-                if (isFinite(OTD)) {
 
-                } else {
-                    OTD = 0;
+                var siteID = @Html.Raw(Json.Encode(Model.SiteID));
+                var month =@Html.Raw(Json.Encode(Model.Month));
+                var year = @Html.Raw(Json.Encode(Model.Year));
+
+                if (Records.length > 0) {
+                    if (confirm('Are you sure you want to save, all records that have no inbound quantity will be ommited?')) {
+
+
+
+                        $("#dlgmodal").dialog('open');
+                        $('#dlgmodal span').text('Saving Records...');
+
+                        $.ajax({
+                            url: '@Url.Action("SaveRatings", "Ratings")',
+                            data:  JSON.stringify({ 'SavedRecords': Records,SiteID: siteID, Month: month, Year:year}), //,CIDArray:CIDarray}),
+                            traditional: true,
+                            contentType: "application/json; charset=utf-8",
+                            type: 'POST',
+                            cache: false,
+                            async: false,
+                            success: function (data) {
+
+
+                            },
+                            complete: function (jqXHR, textStatus, errorThrown) {
+                                $("#dlgmodal").closest('.ui-dialog-content').dialog("close");
+                                window.location.href = "@Html.Raw(@Url.Action("SavedResults", "Ratings", new { @SiteID= @Html.Raw(Json.Encode(Model.SiteID)), @Year = @Html.Raw(Json.Encode(Model.Year)), @Month= @Html.Raw(Json.Encode(Model.Month))}))";
+                            },
+                            error:function(e)
+                            {
+                                alert("Error ! Saving records "+ e);
+                            }
+
+                        });
+
+
+                    }
                 }
-                if (isFinite(PFR)) {
-                } else {
-                    PFR = 0;
+                else {
+                    alert('No rows to save');
                 }
-                if (Inbound > 0) {
-                    Records.push({ CID: CID, Inbound_parts: Inbound, OTR: OTR, OTD: OTD, PFR: PFR })
-                }
-            }
-
-            var siteID = @Html.Raw(Json.Encode(Model.SiteID));
-            var month =@Html.Raw(Json.Encode(Model.Month));
-            var year = @Html.Raw(Json.Encode(Model.Year));
-            
-            if (Records.length > 0) {
-                if (confirm('Are you sure you want to save, all records that have no inbound quantity will be ommited?')) {
-                    $("#dlgmodal").dialog('open');
-                    $('#dlgmodal span').text('Saving Records...');
-                    $.ajax({
-                        url: '@Url.Action("SaveRatings", "Ratings")',
-                        data:  JSON.stringify({ 'SavedRecords': Records,SiteID: siteID, Month: month, Year:year}), //,CIDArray:CIDarray}),
-                        traditional: true,
-                        contentType: "application/json; charset=utf-8",
-                        type: 'POST',
-                        cache: false,
-                        async: false,
-                        success: function (data) {
-
-
-                        },
-                        complete: function (jqXHR, textStatus, errorThrown) {
-                            $("#dlgmodal").closest('.ui-dialog-content').dialog("close");
-                            window.location.href = "@Html.Raw(@Url.Action("SavedResults", "Ratings", new { @SiteID= @Html.Raw(Json.Encode(Model.SiteID)), @Year = @Html.Raw(Json.Encode(Model.Year)), @Month= @Html.Raw(Json.Encode(Model.Month))}))";
-                        },
-                        error:function(e)
-                        {
-                            alert("Error ! Saving records "+ e);
-                        }
-
-                    });
-                               
-                }
-            }
-            else {
-                alert('No rows to save');
-            }
-
-        });
+           // }
+        }*@
         $('#btnSubmit').click(function () {
-            debugger;
 
+            var datacount=0;
             var Records = [];
             var CID, Inbound, OTR, OTD, PFR;
             var len = ($('#container tr').length)/2;
@@ -304,15 +453,20 @@
                 } else {
                     PFR = 0;
                 }
-                if (Inbound > 0) {
+                if(Inbound >0)
+                {
+                   datacount +=1;
+                }
+                if ((Inbound > 0) && (OTR > 0) && (OTD > 0)) {
                     Records.push({ CID: CID, Inbound_parts: Inbound, OTR: OTR, OTD: OTD, PFR: PFR })
                 }
             }
-           
+
+            var submittedCount = Records.length;
             var siteID = @Html.Raw(Json.Encode(Model.SiteID));
             var month =@Html.Raw(Json.Encode(Model.Month));
             var year = @Html.Raw(Json.Encode(Model.Year));
-            debugger
+
             if (Records.length > 0) {
                 $("#dlgmodal").dialog('open');
                 $('#dlgmodal span').text('Submitting Records...');
@@ -325,12 +479,30 @@
                     type: 'POST',
                     cache: false,
                     async: false,
+                    SubmittedCount:submittedCount,
+                    RowCount:len,
+                    DataCount:datacount,
                     success: function (data) {
-
-                    },
-                    complete: function (jqXHR, textStatus, errorThrown) {
-
+                     
                         $("#dlgmodal").closest('.ui-dialog-content').dialog("close");
+
+                        var link = '@Url.Action("Summary", "Ratings", new { SiteID= @Html.Raw(Json.Encode(Model.SiteID)), Year = @Html.Raw(Json.Encode(Model.Year)),
+                                     Month = @Html.Raw(Json.Encode(Model.Month)), SubmittedCount= "-1",RowCount="-2",SavedCount="-3"})';
+                        link=link.replace("-1",this.SubmittedCount).replace("-2",this.RowCount).replace("-3",this.DataCount);
+                        
+                        window.location.href = link;
+
+                    }
+                    //,
+                    //complete: function (jqXHR,submittedCount,len,datacount) {
+
+
+
+                    //}
+                    ,
+                    error:function(e)
+                    {
+                        alert("Error ! Submitting records "+ e);
                     }
                 });
 
@@ -383,7 +555,7 @@
         });
 
         function SearchSupplierByName(SupName) {
-            debugger
+
             $.ajax({
                 url: '@Url.Action("GetSupplierbyName", "Ratings")',
                 //Passes the content of an input up
@@ -403,7 +575,7 @@
         };
 
         $('.btnAdd').bind("click", function () {
-            debugger
+
             $.ajax({
                 url: '@Url.Action("LoadSuppliers", "Ratings")',
                 //Passes the content of an input up
@@ -455,7 +627,7 @@
                     });
                 }
                 else {
-                    debugger
+
                     $.ajax({
                         url: '@Url.Action("AddRowReload", "Ratings")',
                         //Passes the content of an input up
@@ -485,7 +657,7 @@
 
 
         //$('#selectSupplierID').change(function () {
-        //    debugger
+        //
         //    if ($('#selectSupplierID').val() == '') {
         //        $('.btnOK').prop('disabled', true);
         //    } else {
@@ -494,14 +666,14 @@
 
         //});
 
-        //debugger
+        //
         //$('#selectSupplierID').val('').trigger('change');
 
 
 
 
         $('#RatingSuppliers').change(function () {
-            debugger
+
             var cid = $("#RatingSuppliers option:selected").val();
             if (cid != "") {
                 $("#ratings").find('tr').removeClass('active');
@@ -535,38 +707,24 @@
 
             }
         });
-        //$('#container').on("input", ".calcrow", function () {
-        //    var inbound = $(this).closest('tr').find('#Inbound').val();
-        //    var otr = $(this).closest('tr').find('#OTR').val();
-        //    var otd = $(this).closest('tr').find('#OTD').val();
-        //    var pfr = $(this).closest('tr').find('#PFR').val();
-        //    var ri = $(this).closest('tr').find('#RI').val();
-        //    var rp = $(this).closest('tr').find('#RP').val();
-        //    // debugger
-        //    var ppm = Math.round((rp / inbound) * 1000000);
-
-        //    var ipm = ((ri / inbound) * 1000000).toFixed(2);
-        //    var pct = Math.round((otr / otd) * 100);
-
-        //    if (isFinite(ppm)) {
-        //        $(this).closest('tr').find('.Ppm').html(ppm);
-        //    } else {
-        //        //$(this).closest('tr').find('.Ppm').html(ppm);
-        //    }
-        //    if (isFinite(ipm)) {
-        //        $(this).closest('tr').find('.Ipm').html(ipm);
-        //    } else {
-        //        //$(this).closest('tr').find('.Ipm').html(ipm);
-        //    }
-        //    if (isFinite(pct)) {
-        //        $(this).closest('tr').find('.Pct').html(pct);
-        //    } else {
-        //        //$(this).closest('tr').find('.Pct').html(pct);
-        //    }
 
 
-        //});
-        $('#container').on("change", ".calcrow", function () {
+        $("#dlgsve").dialog({
+            autoOpen: false,
+            resizable: false,
+            width: "auto",
+            height: "auto",
+            show: { effect: 'drop', direction: "up" },
+            modal: true,
+            draggable: true,
+            open: function (event, ui) {
+                $(".ui-dialog-titlebar").hide();
+                $(".ui-dialog-titlebar-close").hide();
+            }
+        });
+
+        $(document).on("change", ".calcrow", function () {
+
 
             //var inbound = $(this).closest('tr').find('#Inbound').val();
             //var otr = $(this).closest('tr').find('#OTR').val();
@@ -587,6 +745,22 @@
             var ipm = ((ri / inbound) * 1000000).toFixed(2);
             var pct = Math.round((otr / otd) * 100);
 
+            if (isFinite(inbound)) {
+
+            } else {
+                inbound=0;
+            }
+
+            if (isFinite(otr)) {
+
+            } else {
+                otr = 0;
+            }
+            if (isFinite(otd)) {
+
+            } else {
+                otd = 0;
+            }
             if (isFinite(ppm)) {
                 $(this).closest('tr').find('.Ppm').html(ppm);
             } else {
@@ -602,6 +776,11 @@
             } else {
                 pct = 0;
             }
+            if(parseInt(pct,10)>100)
+            {
+                $(this).closest('tr').find('.Pct').addClass('yellowClass');
+            }
+
 
             var cid = $('#RatingRecords_' + rowid + '__CID').val();
             //  var
@@ -621,8 +800,9 @@
                 error: function (ts) { alert(ts.responseText) }
             });
         });
-
-
+        $(document).on("input", ".calcrow", function () {
+            $("#btnSubmit").addClass('disabled');
+        });
 
     });
     $(document).ajaxComplete(function () {

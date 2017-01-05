@@ -2,6 +2,7 @@
 
 @{
     ViewBag.Title = "Index";
+  
 }
 
 @*@using (Html.BeginForm(new { enctype = "multipart/form-data" }))*@
@@ -70,24 +71,30 @@
                 @Html.Raw(ViewBag.alertmsg)
                 <br />
                 <div class="btn-group pull-right" style="padding-top:10px;">
-                    @if (Model.IsStagingRatings)
+                    @if (Model.IsCurrentRatings && Model.IsStagingRatings)
+                    {
+                        <a href="@Url.Action("LoadAlertDataCurrent", "Ratings", new { SiteID = Model.SiteID, Year = Model.Year, Month = Model.Month })" class="btn btn-success btn-smd">Yes - Overwrite existing data </a>
+                        <a href="@Url.Action("ClearStaging", "ExcelUpload", new { SiteID = Model.SiteID, Year = Model.Year, Month = Model.Month})" class="btn btn-danger btn-md">No - Continue with Upload and clear saved data</a>
+                    }
+                    else if (Model.IsStagingRatings)
                     {
 
                         <a href="@Url.Action("ClearStaging", "ExcelUpload", new { SiteID = Model.SiteID, Year = Model.Year, Month = Model.Month })" class="btn btn-success btn-md">Yes - Continue with Upload </a>
                         <a href="@Url.Action("LoadAlertData", "Ratings", new { SiteID = Model.SiteID, Year = Model.Year, Month = Model.Month, isStaging = true, isLastmonth = false })" class="btn btn-danger btn-md">No - Load Current Period data</a>
                     }
-                    @if (Model.IsPreviousStagingRatings)
+                    else if (Model.IsPreviousStagingRatings)
                     {
 
                         <a href="@Url.Action("LoadAlertData", "Ratings", new { SiteID = Model.SiteID, Year = Model.Year, Month = Model.Month, isStaging = true, isLastmonth = true })" class="btn btn-success btn-md">Yes - Load Previous Period data </a>
                         <a href="@Url.Action("Index", "ExcelUpload", new { SiteID = Model.SiteID})" class="btn btn-danger btn-md">No - Continue with Upload</a>
                     }
-                    @if (Model.IsCurrentRatings)
+                    else if (Model.IsCurrentRatings)
                     {
-                        <a href="@Url.Action("LoadAlertData", "Ratings", new { SiteID = Model.SiteID, Year = Model.Year, Month = Model.Month, isStaging = false, isLastmonth = false })" class="btn btn-success btn-smd">Yes - Overwrite existing data </a>
+                        <a href="@Url.Action("LoadAlertDataCurrent", "Ratings", new { SiteID = Model.SiteID, Year = Model.Year, Month = Model.Month })" class="btn btn-success btn-smd">Yes - Overwrite existing data </a>
                         <a href="@Url.Action("LoadUploadIndex", "ExcelUpload", new { SiteID = Model.SiteID, Year = Model.Year, Month = Model.Month})" class="btn btn-danger btn-md">No - Continue with Upload</a>
                        
                     }
+                   
 
                 </div>
             </div>

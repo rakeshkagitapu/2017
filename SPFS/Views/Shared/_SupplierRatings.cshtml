@@ -111,26 +111,26 @@
 
 
                 <td rowspan="2">
-                    @Html.TextBoxFor(modelItem => Model.RatingRecords[i].OTR, null, new { @class = Model.RatingRecords[i].Reject_incident_count > 0 ? "form-control calcrow onlyNumeric NumberGreaterZero" : "form-control calcrow onlyNumeric", maxlength = 4, style = "width:100%" })
-                @Html.ValidationMessageFor(modelItem => Model.RatingRecords[i].OTR, "", new { style = "display:none" })
-            </td>
+                    @Html.TextBoxFor(modelItem => Model.RatingRecords[i].OTR, null, new { @class = Model.RatingRecords[i].Reject_incident_count > 0 ? "form-control calcrow onlyNumeric NumberGreaterZero" : "form-control calcrow onlyNumeric", maxlength = 10, style = "width:100%" })
+                    @Html.ValidationMessageFor(modelItem => Model.RatingRecords[i].OTR, "", new { style = "display:none" })
+                </td>
 
 
-            <td rowspan="2">
-                @Html.TextBoxFor(modelItem => Model.RatingRecords[i].OTD, null, new { @class = Model.RatingRecords[i].Reject_incident_count > 0 ? "form-control calcrow onlyNumeric NumberGreaterZero" : "form-control calcrow onlyNumeric", maxlength = 4, style = "width:100%" })
-                @Html.ValidationMessageFor(modelItem => Model.RatingRecords[i].OTD, "", new { style = "display:none" })
-            </td>
+                <td rowspan="2">
+                    @Html.TextBoxFor(modelItem => Model.RatingRecords[i].OTD, null, new { @class = Model.RatingRecords[i].Reject_incident_count > 0 ? "form-control calcrow onlyNumeric NumberGreaterZero" : "form-control calcrow onlyNumeric", maxlength = 10, style = "width:100%" })
+                    @Html.ValidationMessageFor(modelItem => Model.RatingRecords[i].OTD, "", new { style = "display:none" })
+                </td>
 
-            <td rowspan="2">
-                <span class="Pct">
-                    @Html.DisplayFor(modelItem => Model.RatingRecords[i].PCT)
-                </span>
-                @Html.HiddenFor(modelItem => Model.RatingRecords[i].PCT, new { @id = "PCT" })
-            </td>
+                <td rowspan="2">
+                    <span class="Pct">
+                        @Html.DisplayFor(modelItem => Model.RatingRecords[i].PCT)
+                    </span>
+                    @Html.HiddenFor(modelItem => Model.RatingRecords[i].PCT, new { @id = "PCT" })
+                </td>
 
-            <td rowspan="2"> @Html.TextBoxFor(modelItem => Model.RatingRecords[i].PFR, null, new { @class = Model.RatingRecords[i].Reject_incident_count > 0 ? "form-control calcrow onlyNumeric NumberGreaterZero" : "form-control calcrow onlyNumeric", maxlength = 4, style = "width:60%" })</td>
-            @Html.ValidationMessageFor(modelItem => Model.RatingRecords[i].PFR, "", new { style = "display:none" })
-        </tr>
+                <td rowspan="2"> @Html.TextBoxFor(modelItem => Model.RatingRecords[i].PFR, null, new { @class = "form-control calcrow", maxlength = 4, style = "width:60%" })</td>
+                @Html.ValidationMessageFor(modelItem => Model.RatingRecords[i].PFR, "", new { style = "display:none" })
+            </tr>
 
             <tr id="part2" data-rowid="@i">
                 <td>

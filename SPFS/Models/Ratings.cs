@@ -56,15 +56,19 @@ namespace SPFS.Models
         public int SiteID { get; set; }
         public int CID { get; set; }
 
+        [RegularExpression(@"^[0-9']*$", ErrorMessage = "Only numbers allowed.")]
         [Display(Name = "Inbound Parts")]
         public int Inbound_parts { get; set; }
 
+        [RegularExpression(@"^[0-9']*$", ErrorMessage = "Only numbers allowed.")]
         [Display(Name = "On Time Quantity Received")]
         public int OTR { get; set; }
 
+        [RegularExpression(@"^[0-9']*$", ErrorMessage = "Only numbers allowed.")]
         [Display(Name = "On Time Quantity Due")]
         public int OTD { get; set; }
 
+        [RegularExpression(@"^[0-9']*$", ErrorMessage = "Only numbers allowed.")]
         [Display(Name = "Premium Frieght Instances")]
         public int PFR { get; set; }
         public System.DateTime Initial_submission_date { get; set; }
@@ -177,5 +181,26 @@ namespace SPFS.Models
         public int OTD { get; set; }
 
         public int PFR { get; set; }
+    }
+
+    public class Summary
+    {
+        public int SiteID { get; set; }
+
+        public string SiteName { get; set; }
+
+        public int Month { get; set; }
+
+        public int Year { get; set; }
+
+        public int StageCount { get; set; }
+
+        public int RowCount { get; set; }
+
+        public int SubmittedCount { get; set; }
+
+        public int GDISOrgEntity { get; set; }
+
+        
     }
 }
