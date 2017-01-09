@@ -24,7 +24,7 @@ namespace SPFS.Model
         public int PFR { get; set; }
         public System.DateTime Initial_submission_date { get; set; }
         public Nullable<bool> Temp_Upload_ { get; set; }
-        public Nullable<bool> Interface_flag { get; set; }
+        public bool Interface_flag { get; set; }
         public int UserID { get; set; }
         public System.DateTime Created_date { get; set; }
         public string Created_by { get; set; }

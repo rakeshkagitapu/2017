@@ -14,7 +14,7 @@
     </div>
     <div class="panel-body">
         <h4> Thank You for submitting you ratings for location <strong>@Model.SiteName</strong></h4> 
-        <p>These Ratings are  for Ratings-period of  <strong>@System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(Model.Month),@Model.Year</strong>
+        <p>These Ratings are <strong>@Html.Raw(ViewBag.Ratings)</strong>  for Ratings-period of  <strong>@System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(Model.Month),@Model.Year</strong>
               
         </p>  
       
@@ -23,16 +23,16 @@
     <!-- List group -->
     <div class="list-group panel-primary">
         @*<a href="#" class="list-group-item pnlbg">*@
-            <h4 class="list-group-item pnlbg"><span><strong>Detailed summary as provided below</strong></span></h4>
+            <h4 class="list-group-item pnlbg"><span>Detailed summary as provided below</span></h4>
         @*</a>*@
       
-            <a href="#" class="list-group-item pnl">
+            <a href="#" class="list-group-item">
                 <span class="badge badge-info">@Model.RowCount</span>Total Records
             </a>
-            <a href="#" class="list-group-item pnl">
+            <a href="#" class="list-group-item">
                 <span class="badge badge-info">@Model.SubmittedCount</span>Submitted Records
             </a>
-            <a href="#" class="list-group-item pnl">
+            <a href="#" class="list-group-item">
                 <span class="badge badge-info">@Model.StageCount</span>Saved Records
             </a>
 

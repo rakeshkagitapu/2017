@@ -51,17 +51,17 @@
 
     <hr style="margin-top:10px !important; margin-bottom:10px !important;" />
     @*<div class="alert alert-warning alert-dismissible col-md-12" role="alert" style="padding-top: 1px;">
-        <span class="glyphicon  glyphicon-info-sign"></span><strong>Errors!</strong> @Html.ValidationSummary()
-    </div>*@
+            <span class="glyphicon  glyphicon-info-sign"></span><strong>Errors!</strong> @Html.ValidationSummary()
+        </div>*@
 
 if (count > 0)
 {
     <div class="alert alert-danger alert-dismissible col-md-12" role="alert" style="padding: 2px;margin-bottom: 5px !important; display:none;" id="ratingserror">
-        <span class="glyphicon  glyphicon-warning-sign"></span><strong>  Errors!</strong> Please fill all highlighted cells
+        <span class="glyphicon  glyphicon-warning-sign"></span><strong>  Errors!</strong> Suppliers with Reject Incidents and Reject Quantities MUST be rated
     </div>
-        <div id="output" class="col-md-12">
-            @Html.Partial("_SupplierRatings", Model)
-        </div>
+    <div id="output" class="col-md-12">
+        @Html.Partial("_SupplierRatings", Model)
+    </div>
 
         <br />
 
@@ -73,9 +73,10 @@ if (count > 0)
 
             </div>
             <div class="pull-right">
-                <a href="@Url.Action("Index","Home")" class="btn btn-danger" onclick="return confirm('Are you sure, all data will be lost')">
+                <a href="@Url.Action("Index", "Ratings")" class="btn btn-danger" onclick="return confirm('Are you sure you want to cancel')">
                     <span class="glyphicon glyphicon-remove"></span> Cancel
                 </a>
+
                 <button type="button" id="btnSave" class="btn btn-primary" onclick="return confirmSave();">
                     <span class="glyphicon glyphicon-floppy-save"></span> Save
 
@@ -114,29 +115,29 @@ if (count > 0)
 <script type="text/javascript">
 
     function confirmSave() {
-            
-        if(confirm('Are you sure you want to save, all records that have no inbound quantity will be ommited?'))
+
+        if(confirm('Are you sure you want to save, all records that have no inbound quantity will be omitted?'))
         {
             var divObj= $('#dlgsve');
             divObj.dialog('open');
             //$('#dlgmodal span').text('Saving Records...');
-              
+
             if($('#ExcelUpload').valid())
             {
                 SaveRecords();
             }
             else
             {
-                $('#ratingserror').show();     
+                $('#ratingserror').show();
                 $("#dlgsve").closest('.ui-dialog-content').dialog("close");
             }
         }
-            
+
     }
 
     function SaveRecords() {
-            
-                   
+
+
         var Records = [];
         var CID, Inbound, OTR, OTD, PFR;
         var len = ($('#container tr').length)/2;
@@ -176,7 +177,7 @@ if (count > 0)
         var month =@Html.Raw(Json.Encode(Model.Month));
         var year = @Html.Raw(Json.Encode(Model.Year));
 
-          @*var CIDarray =[];
+        @*var CIDarray =[];
         var RateSuppliers = @Html.Raw(Json.Encode(ViewBag.RatingSuppliers));
 
         for( i = 0; i < RateSuppliers.length; i++)
@@ -185,131 +186,158 @@ if (count > 0)
         }*@
 
         if (Records.length > 0) {
-               
-            if (confirm('Are you sure you want to save, all records that have no inbound quantity will be ommited?')) {
-                //debugger
-                $("#dlgmodal").dialog('open');
-                $('#dlgmodal span').text('Saving Records...');
-                $.ajax({
-                    url: '@Url.Action("SaveRatings", "ExcelUpload")',
-                    data:  JSON.stringify({ 'SavedRecords': Records,SiteID: siteID, Month: month, Year:year}), //,CIDArray:CIDarray}),
-                    traditional: true,
-                    contentType: "application/json; charset=utf-8",
-                    type: 'POST',
-                    cache: false,
-                    async: false,
-                    success: function (data) {
 
 
-                    },
-                    complete: function (jqXHR, textStatus, errorThrown) {
-                        $("#dlgmodal").closest('.ui-dialog-content').dialog("close");
-                        window.location.href = "@Html.Raw(@Url.Action("SavedResults", "ExcelUpload", new { @SiteID= @Html.Raw(Json.Encode(Model.SiteID)), @Year = @Html.Raw(Json.Encode(Model.Year)), @Month= @Html.Raw(Json.Encode(Model.Month))}))";
-                    },
-                    error:function(e)
-                    {
-                        alert("Error ! Saving records "+ e);
-                    }
 
-                });
-            }
-                
-        }
-    else {
-              alert('No rows to save');
-    }
-
-    }
-    $(document).ready(function () {
-
-        $('#dlgsve').hide();
-    $('#btnSubmit').click(function () {
-        //debugger;
-        var datacount=0;
-        var Records = [];
-        var CID, Inbound, OTR, OTD, PFR;
-        var len = ($('#container tr').length)/2;
-        for (var i = 0; i < len; i += 1) {
-
-            CID =  $('#RatingRecords_' + i + '__CID').val();//parseInt($('#container tr')[i + 1].cells['0'].innerText, 10);
-            Inbound = $('#RatingRecords_' + i + '__Inbound_parts').val();
-            OTR = $('#RatingRecords_' + i + '__OTR').val();
-            OTD = $('#RatingRecords_' + i + '__OTD').val();
-            PFR = $('#RatingRecords_' + i + '__PFR').val();
-
-            if (isFinite(Inbound)) {
-
-            } else {
-                Inbound = 0;
-            }
-            if (isFinite(OTR)) {
-
-            } else {
-                OTR = 0;
-            }
-            if (isFinite(OTD)) {
-
-            } else {
-                OTD = 0;
-            }
-            if (isFinite(PFR)) {
-            } else {
-                PFR = 0;
-            }
-            if(Inbound >0)
-            {
-                datacount +=1;
-            }
-            if ((Inbound > 0) && (OTR > 0) && (OTD > 0)) {
-                Records.push({ CID: CID, Inbound_parts: Inbound, OTR: OTR, OTD: OTD, PFR: PFR })
-            }
-        }
-        
-        var submittedCount = Records.length;
-        var siteID = @Html.Raw(Json.Encode(Model.SiteID));
-        var month =@Html.Raw(Json.Encode(Model.Month));
-        var year = @Html.Raw(Json.Encode(Model.Year));
-        //debugger
-        if (Records.length > 0) {
+            //debugger
             $("#dlgmodal").dialog('open');
-            $('#dlgmodal span').text('Submitting Records...');
+            $('#dlgmodal span').text('Saving Records...');
             $.ajax({
-                url: '@Url.Action("SubmitRatings", "Ratings")',
-
-                data:  JSON.stringify({ 'SubmittedRecords': Records,SiteID: siteID, Month: month, Year:year}),
+                url: '@Url.Action("SaveRatings", "ExcelUpload")',
+                data:  JSON.stringify({ 'SavedRecords': Records,SiteID: siteID, Month: month, Year:year}), //,CIDArray:CIDarray}),
                 traditional: true,
                 contentType: "application/json; charset=utf-8",
                 type: 'POST',
                 cache: false,
                 async: false,
                 success: function (data) {
+
+
+                },
+                complete: function (jqXHR, textStatus, errorThrown) {
                     $("#dlgmodal").closest('.ui-dialog-content').dialog("close");
-
-                    var link = '@Url.Action("Summary", "ExcelUpload", new { SiteID= @Html.Raw(Json.Encode(Model.SiteID)), Year = @Html.Raw(Json.Encode(Model.Year)),
-                    Month = @Html.Raw(Json.Encode(Model.Month)), SubmittedCount= "-1",RowCount="-2",SavedCount="-3"})';
-
-                    link=link.replace("-1",this.SubmittedCount).replace("-2",this.RowCount).replace("-3",this.DataCount);
-                        
-                window.location.href = link;
-                }
-                //,
-                //complete: function (jqXHR, textStatus, errorThrown) {
-
-                //   $("#dlgmodal").closest('.ui-dialog-content').dialog("close");
-                //}
-                ,  
+                    window.location.href = "@Html.Raw(@Url.Action("SavedResults", "ExcelUpload", new { @SiteID= @Html.Raw(Json.Encode(Model.SiteID)), @Year = @Html.Raw(Json.Encode(Model.Year)), @Month= @Html.Raw(Json.Encode(Model.Month))}))";
+                },
                 error:function(e)
                 {
                     alert("Error ! Saving records "+ e);
                 }
+
             });
+
 
         }
         else {
             alert('No rows to save');
         }
 
-    });
+    }
+    function scrolltoSupplier(CID)
+    {
+        var tableRow = $("#ratings tr td:nth-child(1)").filter(function () {
+            return $(this).is(":contains('" + CID + "')");
+        }).closest("tr");
+        debugger
+        if (tableRow.length > 0) {
+            $("#ratings").find('tr').removeClass('active');
+            var oldrec = $("#selectedCid").closest('tr').attr("id", "");
+            $("#popSup").closest('.ui-dialog-content').dialog("close");
+            
+            var row = tableRow.addClass('active');
+            row.attr("id", "selectedCid");
+
+            var container = $('tbody');
+            var scrollTo = $('#selectedCid');
+
+            container.animate({
+                scrollTop: (scrollTo.offset().top - 30) - container.offset().top + container.scrollTop()
+            });
+
+        }
+    }
+    $(document).ready(function () {
+
+        $('#dlgsve').hide();
+        $('#btnSubmit').click(function () {
+            //debugger;
+            var datacount=0;
+            var Records = [];
+            var CID, Inbound, OTR, OTD, PFR;
+            var len = ($('#container tr').length)/2;
+            for (var i = 0; i < len; i += 1) {
+
+                CID =  $('#RatingRecords_' + i + '__CID').val();//parseInt($('#container tr')[i + 1].cells['0'].innerText, 10);
+                Inbound = $('#RatingRecords_' + i + '__Inbound_parts').val();
+                OTR = $('#RatingRecords_' + i + '__OTR').val();
+                OTD = $('#RatingRecords_' + i + '__OTD').val();
+                PFR = $('#RatingRecords_' + i + '__PFR').val();
+
+                if (isFinite(Inbound)) {
+
+                } else {
+                    Inbound = 0;
+                }
+                if (isFinite(OTR)) {
+
+                } else {
+                    OTR = 0;
+                }
+                if (isFinite(OTD)) {
+
+                } else {
+                    OTD = 0;
+                }
+                if (isFinite(PFR)) {
+                } else {
+                    PFR = 0;
+                }
+                if((Inbound >0) && (OTR < 0) || (OTD < 0))
+                {
+                    datacount +=1;
+                }
+                if ((Inbound > 0) && (OTR > 0) && (OTD > 0)) {
+                    Records.push({ CID: CID, Inbound_parts: Inbound, OTR: OTR, OTD: OTD, PFR: PFR })
+                }
+            }
+
+            var submittedCount = Records.length;
+            var siteID = @Html.Raw(Json.Encode(Model.SiteID));
+            var month =@Html.Raw(Json.Encode(Model.Month));
+            var year = @Html.Raw(Json.Encode(Model.Year));
+            //debugger
+            if (Records.length > 0) {
+                $("#dlgmodal").dialog('open');
+                $('#dlgmodal span').text('Submitting Records...');
+                $.ajax({
+                    url: '@Url.Action("SubmitRatings", "Ratings")',
+
+                    data:  JSON.stringify({ 'SubmittedRecords': Records,SiteID: siteID, Month: month, Year:year}),
+                    traditional: true,
+                    contentType: "application/json; charset=utf-8",
+                    type: 'POST',
+                    cache: false,
+                    async: false,
+                    SubmittedCount:submittedCount,
+                    RowCount:len,
+                    DataCount:datacount,
+                    success: function (data) {
+                        $("#dlgmodal").closest('.ui-dialog-content').dialog("close");
+
+                        var link = '@Url.Action("Summary", "ExcelUpload", new { SiteID= @Html.Raw(Json.Encode(Model.SiteID)), Year = @Html.Raw(Json.Encode(Model.Year)),
+                    Month = @Html.Raw(Json.Encode(Model.Month)), SubmittedCount= "-1",RowCount="-2",SavedCount="-3"})';
+
+                        link=link.replace("-1",this.SubmittedCount).replace("-2",this.RowCount).replace("-3",this.DataCount);
+
+                        window.location.href = link;
+                    }
+                    //,
+                    //complete: function (jqXHR, textStatus, errorThrown) {
+
+                    //   $("#dlgmodal").closest('.ui-dialog-content').dialog("close");
+                    //}
+                    ,
+                    error:function(e)
+                    {
+                        alert("Error ! Saving records "+ e);
+                    }
+                });
+
+            }
+            else {
+                alert('No rows to save');
+            }
+
+        });
 
         var CID = $("#SelectSupplierID option:selected").val();
 
@@ -338,10 +366,19 @@ if (count > 0)
                 cache: true,
 
                 success: function (data) {
-                    $('#selectSupplierID').find('option').remove();
-                    $.each(data, function (i, optionData) {
-                        $('#selectSupplierID').append($('<option></option>').val(optionData.Value).html(optionData.Text));
-                    });
+                   
+                    if(data.length > 0)
+                    {
+                        $('#selectSupplierID').find('option').remove();
+                        $.each(data, function (i, optionData) {
+                            $('#selectSupplierID').append($('<option></option>').val(optionData.Value).html(optionData.Text));
+                        });
+                    }
+
+                    else {
+                        ShowDialogBox('Alert', 'No results found.', 'Ok', '', '', null);
+                        $('#selectSupplierID').find('option').remove();
+                    }
                 }
             });
         };
@@ -364,7 +401,12 @@ if (count > 0)
             $("#popSup").dialog("open");
 
         });
-
+        $('#popSup').on("click", ".btnCl", function (e)
+        {
+            //debugger
+            $("#popSup").closest('.ui-dialog-content').dialog("close");
+            
+        });
         //$('.btnAdd').bind("click", function () {
         //       $('#popSup').css("visibility", "visible");
         //        $("#popSup").dialog('option', 'title', "Select Supplier");
@@ -412,22 +454,28 @@ if (count > 0)
                         cache: false,
                         dataType: 'html',
                         async: false,
+                        CID:selectedValue,
                         success: function (data) {
                             var finaltext = selectedText + " Added to list";
 
                             $("#selectSupplierID").find("option:selected").prop('selected', false);
                             $('#output').children().remove();
                             $('#output').html(data);
-                          //  $('.btnOK').prop('disabled', true);
+                            //  $('.btnOK').prop('disabled', true);
                             $("#popSup").closest('.ui-dialog-content').dialog("close");
                             $('#RatingSuppliers').selectpicker('refresh');
                         },
+                        complete: function (jqXHR, textStatus, errorThrown) {
+                            
+                            scrolltoSupplier(this.CID);
+                        },
+
                         error: function (ts) { alert(ts.responseText) }
                     });
                 }
             }
             else {
-                ShowDialogBox('Alert', 'Supplier not selected!.', 'Ok', '', '', null);
+                ShowDialogBox('Alert', 'Please select Supplier or click cancel.', 'Ok', '', '', null);
                 //alert("Select Supplier");
             }
         });
@@ -445,7 +493,7 @@ if (count > 0)
 
 
         $('#RatingSuppliers').change(function () {
-           
+
             var cid = $("#RatingSuppliers option:selected").val();
             if (cid != "") {
                 $("#ratings").find('tr').removeClass('active');
@@ -489,11 +537,12 @@ if (count > 0)
 
         $('#popSup').dialog({
             autoOpen: false,
-            width: 600,
+            width: 620,
             height: 350,
             resizable: false,
             title: 'Select Supplier',
             modal: true,
+            hide: { effect: 'scale', duration: 400 },
             open: function (event, ui) {
 
             }
@@ -522,10 +571,10 @@ if (count > 0)
         //    var rp = $(this).closest('tr').find('#RP').val();
 
         //    var ppm = Math.round((rp / inbound) * 1000000);
-           
+
         //    var ipm = ((ri / inbound) * 1000000).toFixed(2);
         //    var pct = Math.round((otr / otd) * 100);
-           
+
         //    if (isFinite(ppm)) {
         //        $(this).closest('tr').find('.Ppm').html(ppm);
         //    } else {
@@ -541,8 +590,8 @@ if (count > 0)
         //    } else {
         //        //$(this).closest('tr').find('.Pct').html(pct);
         //    }
-          
-           
+
+
         //});
         $(document).on("change", ".calcrow", function () {
             //debugger
@@ -558,20 +607,20 @@ if (count > 0)
             var ppm = Math.round((rp / inbound) * 1000000);
             var ipm = ((ri / inbound) * 1000000).toFixed(2);
             var pct = Math.round((otr / otd) * 100);
-                                  
+
             if (isFinite(inbound)) {
-                
+
             } else {
                 inbound=0;
             }
 
             if (isFinite(otr)) {
-               
+
             } else {
                 otr = 0;
             }
             if (isFinite(otd)) {
-                
+
             } else {
                 otd = 0;
             }
@@ -590,27 +639,31 @@ if (count > 0)
             } else {
                 pct = 0;
             }
-          
+
             if(parseInt(pct,10)>100)
             {
                 $(this).closest('tr').find('.Pct').addClass('yellowClass');
             }
-             
-           
+
+
             var cid = $('#RatingRecords_' + rowid + '__CID').val();
-          //  var
+            var siteID = @Html.Raw(Json.Encode(Model.SiteID));
+            var month =@Html.Raw(Json.Encode(Model.Month));
+            var year = @Html.Raw(Json.Encode(Model.Year));
+            //  var
             // var cid = $
             $.ajax({
-                url: '@Url.Action("UpdateRating", "ExcelUpload")',
+                url: '@Url.Action("UpdateRating", "Ratings")',
                 //Passes the content of an input up
-                data: { CID: cid,Inbound: inbound, OTR: otr, OTD : otd, PFR: pfr, RI: ri, RP: rp, PPM: ppm,IPM: ipm,PCT:pct }, //,SiteID:siteId,count:cont
+                data: { CID: cid, Inbound: inbound, OTR: otr, OTD: otd, PFR: pfr, RI: ri, RP: rp, PPM: ppm, IPM: ipm, PCT: pct,SiteID: siteID,Month: month, Year: year }, //,SiteID:siteId,count:cont
                 contentType: "application/json; charset=utf-8",
                 type: 'GET',
                 cache: false,
                 dataType: 'html',
                 async: false,
                 success: function (data) {
-                    
+
+
                 },
                 error: function (ts) { alert(ts.responseText) }
             });

@@ -73,7 +73,7 @@ namespace SPFS.Models
         public int PFR { get; set; }
         public System.DateTime Initial_submission_date { get; set; }
         public Nullable<bool> Temp_Upload_ { get; set; }
-        public Nullable<bool> Interface_flag { get; set; }
+        public bool Interface_flag { get; set; }
         public int UserID { get; set; }
         public System.DateTime Created_date { get; set; }
         public string Created_by { get; set; }
@@ -117,7 +117,7 @@ namespace SPFS.Models
         [Display(Name = "Reject Incidents")]
         public int Reject_incident_count { get; set; }
 
-        [Display(Name = "Reject Parts")]
+        [Display(Name = "Reject Quantity")]
         public int Reject_parts_count { get; set; }
 
         public double PPM { get; set; }

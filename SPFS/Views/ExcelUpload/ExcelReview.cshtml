@@ -110,10 +110,17 @@
                 cache: true,
 
                 success: function (data) {
-                    $('#selectSupplierID').find('option').remove();
-                    $.each(data, function (i, optionData) {
-                        $('#selectSupplierID').append($('<option></option>').val(optionData.Value).html(optionData.Text));
-                    });
+                    if (data.length > 0) {
+                        $('#selectSupplierID').find('option').remove();
+                        $.each(data, function (i, optionData) {
+                            $('#selectSupplierID').append($('<option></option>').val(optionData.Value).html(optionData.Text));
+                        });
+                    }
+
+                    else {
+                        ShowDialogBox('Alert', 'No results found.', 'Ok', '', '', null);
+                        $('#selectSupplierID').find('option').remove();
+                    }
                 }
             });
         };
@@ -146,56 +153,66 @@
 
             var selectedText = $("#selectSupplierID").find("option:selected").text();
             var selectedValue = $("#selectSupplierID").val();
+            if (selectedValue != null) {
+                $.ajax({
+                    url: '@Url.Action("UpdateRecord", "ExcelUpload")',
+                    //Passes the content of an input up
+                    data: { CID: selectedValue, Name: selectedText, Rowid: rowID },
+                    contentType: "application/json; charset=utf-8",
+                    type: 'GET',
+                    cache: false,
+                    //async: false,
+                    success: function (data) {
 
-            $.ajax({
-                url: '@Url.Action("UpdateRecord", "ExcelUpload")',
-                //Passes the content of an input up
-                data: { CID: selectedValue, Name: selectedText, Rowid: rowID },
-                contentType: "application/json; charset=utf-8",
-                type: 'GET',
-                cache: false,
-                //async: false,
-                success: function (data) {
+                        var supplierRow = document.getElementById(rowID);
 
-                    var supplierRow = document.getElementById(rowID);
+                        //update CID which is the 1st td element
+                        supplierRow.cells[0].innerHTML = data.CID;
 
-                    //update CID which is the 1st td element
-                    supplierRow.cells[0].innerHTML = data.CID;
+                        //update DUNS which is the 2nd td element
+                        supplierRow.cells[1].innerHTML = data.DUNS;
 
-                    //update DUNS which is the 2nd td element
-                    supplierRow.cells[1].innerHTML = data.DUNS;
+                        var spanstring = '<span class="glyphicon glyphicon-ok fixedClass" id="status">  Fixed</span>'
 
-                    var spanstring = '<span class="glyphicon glyphicon-ok fixedClass" id="status">  Fixed</span>'
+                        //var spanstring = '<span class="glyphicon glyphicon-ok fixedClass" title="row updated" rel="tooltip" id="status">  Fixed</span>'
+                        //var spanstring = '<h4><span class="label label-success">Success</span></h4>'
+                        supplierRow.cells[7].innerHTML = spanstring;
 
-                    //var spanstring = '<span class="glyphicon glyphicon-ok fixedClass" title="row updated" rel="tooltip" id="status">  Fixed</span>'
-                    //var spanstring = '<h4><span class="label label-success">Success</span></h4>'
-                    supplierRow.cells[7].innerHTML = spanstring;
+                        Ucount++;
+                        if (Pcount <= 0) {
+                            var jcount = parseInt($("#ErrorCount").attr('value'), 10);
+                            jcount = jcount - Ucount;
+                            Pcount = jcount;
+                        }
+                        else {
+                            var jcount = Pcount - Ucount;
+                            Pcount = jcount;
+                        }
 
-                    Ucount++;
-                    if (Pcount <= 0) {
-                        var jcount = parseInt($("#ErrorCount").attr('value'), 10);
-                        jcount = jcount - Ucount;
-                        Pcount = jcount;
+                        if (jcount > 0) {
+                            $("#ErrorCount").html(" <strong>Warning!</strong> there are " + jcount + " error record(s) in this Upload now.");
+
+
+                        }
+                        else {
+                            $("#ErrorCount").html(" <strong>Success!</strong> All records are fixed Now. Please proceed to merge.");
+                            $("#ErrorCount").removeClass("alert alert-warning").addClass("alert alert-success");
+                            $(".Merge").show();
+                        }
+
+                        $("#popSup").closest('.ui-dialog-content').dialog("close");
                     }
-                    else {
-                        var jcount = Pcount - Ucount;
-                        Pcount = jcount;
-                    }
+                });
+            }
+            else {
+                ShowDialogBox('Alert', 'Please select Supplier or click cancel.', 'Ok', '', '', null);
+                //alert("Select Supplier");
+            }
 
-                    if (jcount > 0) {
-                        $("#ErrorCount").html(" <strong>Warning!</strong> there are " + jcount + " error record(s) in this Upload now.");
-
-
-                    }
-                    else {
-                        $("#ErrorCount").html(" <strong>Success!</strong> All records are fixed Now. Please proceed to merge.");
-                        $("#ErrorCount").removeClass("alert alert-warning").addClass("alert alert-success");
-                        $(".Merge").show();
-                    }
-
-                    $("#popSup").closest('.ui-dialog-content').dialog("close");
-                }
-            });
+        });
+        $('#popSup').on("click", ".btnCl", function (e) {
+            debugger
+            $("#popSup").closest('.ui-dialog-content').dialog("close");
 
         });
         var Rcount=0;
@@ -307,7 +324,7 @@
 
         $('#popSup').dialog({
             autoOpen: false,
-            width: 600,
+            width: 620,
             height: 350,
             resizable: false,
             title: 'Select Supplier',

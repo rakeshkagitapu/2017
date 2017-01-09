@@ -32,7 +32,7 @@ namespace SPFS.Model
         public virtual DbSet<SPFS_USERS> SPFS_USERS { get; set; }
         public virtual DbSet<SPFS_USERSITES> SPFS_USERSITES { get; set; }
         public virtual DbSet<SPFS_LINK_ERP> SPFS_LINK_ERP { get; set; }
-        public virtual DbSet<SPFS_SUPPLIER_RATINGS> SPFS_SUPPLIER_RATINGS { get; set; }
         public virtual DbSet<SPFS_STAGING_SUPPLIER_RATINGS> SPFS_STAGING_SUPPLIER_RATINGS { get; set; }
+        public virtual DbSet<SPFS_SUPPLIER_RATINGS> SPFS_SUPPLIER_RATINGS { get; set; }
     }
 }

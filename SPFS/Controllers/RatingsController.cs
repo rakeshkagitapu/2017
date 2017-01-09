@@ -165,7 +165,29 @@ namespace SPFS.Controllers
                
                 List<RatingRecord> prodrecs  = ProdRecords(ratingModel, CheckingDate, repository);
                 List<RatingRecord> stagrecs = StageRecords(ratingModel, CheckingDate, repository);
-                ratingModel.RatingRecords = prodrecs != null ? prodrecs.Union(stagrecs).ToList() : stagrecs;
+                var query = from x in stagrecs
+                            join y in prodrecs
+                            on x.CID equals y.CID
+                            select new { x, y };
+
+                var unmatch = (from agrr in prodrecs
+                               where !(stagrecs.Any(i => i.CID == agrr.CID))
+                               select agrr).ToList();
+
+
+                if (unmatch != null)
+                {
+                    stagrecs.AddRange(unmatch);
+                }
+                                
+                ratingModel.RatingRecords = stagrecs;
+                //foreach( var rec in stagrecs)
+                //{
+                //    if(rec.CID==1363773)
+                //    {
+
+                //    }
+                //}
 
             }
 
@@ -221,11 +243,13 @@ namespace SPFS.Controllers
                 using (Repository Rep = new Repository())
                 {
                     CurrentRecords = ProdRecords(ratingModel, CheckingDate, Rep);
-
+                    StagingRecords = StageRecords(ratingModel, CheckingDate, Rep);
                     int CurrentCount = CurrentRecords != null ? CurrentRecords.Count : 0;
+                    int StageCount = StagingRecords != null ? StagingRecords.Count : 0;
+
                     if (CurrentCount <= 0)
                     {
-                        StagingRecords = StageRecords(ratingModel, CheckingDate, Rep);
+                        //StagingRecords = StageRecords(ratingModel, CheckingDate, Rep);
 
                         if (StagingRecords.Count > 0)
                         {
@@ -290,14 +314,32 @@ namespace SPFS.Controllers
                     }
                     else
                     {
-                        //data exists for you and any changes will overwrite existing data. Press clear to stop editing submittedratings
-                        ratingModel.IsAlert = true;
-                        ratingModel.IsCurrentRatings = true;
-                        ViewBag.alertmsg = "Data exists and has been <strong>Submitted</strong> for this rating period. Do you wish to <strong>Edit</strong> these previously <strong>Submitted</strong> ratings?";
-                        ratingModel.ShowResult = false;
-                        ratingModel.EditMode = false;
-                        CreateListViewBags();
-                        return View("Index", ratingModel);
+                        if (StageCount <= 0)
+                        {
+                            //data exists for you and any changes will overwrite existing data. Press clear to stop editing submittedratings
+                            ratingModel.IsAlert = true;
+                            ratingModel.IsCurrentRatings = true;
+
+                            ViewBag.alertmsg = "Data exists and has been <strong>Submitted</strong> for this rating period. Do you wish to <strong>Upload</strong> again and any overlay previously <strong>Submitted</strong> ratings?";
+                           
+                            ratingModel.ShowResult = false;
+                            ratingModel.EditMode = false;
+                            CreateListViewBags();
+                            return View("Index", ratingModel);
+                        }
+                        else
+                        {
+                            ratingModel.IsAlert = true;
+                            ratingModel.IsCurrentRatings = true;
+                            ratingModel.IsStagingRatings = true;
+                            ViewBag.alertmsg = "Data exists and has been <strong>Submitted</strong> and some has <strong> Saved</strong> for this rating period. Do you wish to <strong>Upload</strong> again and any overlay previously <strong>Submitted</strong> ratings?";
+                            
+                            ratingModel.ShowResult = false;
+                            ratingModel.EditMode = false;
+                            CreateListViewBags();
+                            return View("Index", ratingModel);
+                        }
+                        
                     }
                 }
 
@@ -421,7 +463,7 @@ namespace SPFS.Controllers
             CreateListViewBags();
             // ViewBag.Suppliers = selectSuppliers;  ratingModel.RatingRecords = IncidentSpendOrder(ratingModel);
            
-                RatingsViewModel UpdatedModel = Merge(RatingModel);
+                RatingsViewModel UpdatedModel = MergeSaved(RatingModel);
 
                 var rateSuppliers = UpdatedModel.RatingRecords.Select(r => new SelectListItem { Text = r.SupplierName + " CID:" + r.CID, Value = r.CID.ToString() }).ToList();
                 LoadDropdowns(rateSuppliers);
@@ -460,7 +502,7 @@ namespace SPFS.Controllers
             CreateListViewBags();
             // ViewBag.Suppliers = selectSuppliers;  ratingModel.RatingRecords = IncidentSpendOrder(ratingModel);
 
-            RatingsViewModel UpdatedModel = Merge(RatingModel);
+            RatingsViewModel UpdatedModel = MergeSaved(RatingModel);
 
             var rateSuppliers = UpdatedModel.RatingRecords.Select(r => new SelectListItem { Text = r.SupplierName + " CID:" + r.CID, Value = r.CID.ToString() }).ToList();
             LoadDropdowns(rateSuppliers);
@@ -717,7 +759,7 @@ namespace SPFS.Controllers
             return PartialView("_SupplierRatings", RatingModel);
         }
 
-        public JsonResult UpdateRating(int CID, int Inbound, int OTR, int OTD, int PFR, double PPM, double IPM, double PCT)
+        public JsonResult UpdateRating(int CID, int Inbound, int OTR, int OTD, int PFR, double PPM, double IPM, double PCT,int SiteID, int Month, int Year)
         {
 
             //RatingsViewModel RatingModel = new RatingsViewModel();
@@ -732,6 +774,32 @@ namespace SPFS.Controllers
 
             TempData["SearchedResults"] = RatingModel;
 
+            int CheckingDate = Convert.ToInt32("" + Year + Month.ToString().PadLeft(2, '0'));
+            Utilities util = new Utilities();
+            using (Repository repository = new Repository())
+
+            {
+                    if (repository.Context.SPFS_SUPPLIER_RATINGS.Any(s => s.SiteID == SiteID && s.Rating_period == CheckingDate && s.CID == CID))
+                    {
+                        var rec = repository.Context.SPFS_SUPPLIER_RATINGS.Where(s => s.SiteID == SiteID && s.Rating_period == CheckingDate && s.CID == CID).FirstOrDefault();
+                        if (rec != null)
+                        {
+                            rec.Inbound_parts = Inbound;
+                            rec.OTD = OTD;
+                            rec.OTR = OTR;
+                            rec.PFR = PFR;
+                            rec.Interface_flag = true;
+                            rec.UserID = util.GetCurrentUser().UserID;
+                            rec.Modified_date = DateTime.Now;
+                            rec.Modified_by = util.GetCurrentUser().UserName;
+                        }
+                        repository.Context.SaveChanges();
+
+                    }
+                    
+
+                }
+                
 
             return Json(true, JsonRequestBehavior.AllowGet);
         }
@@ -1136,7 +1204,7 @@ namespace SPFS.Controllers
             summary.SubmittedCount = SubmittedCount;
             summary.RowCount = RowCount;
             summary.StageCount = SavedCount;
-            ViewBag.Ratings = "Manual";
+            ViewBag.Ratings = "Manual Entry";
            
             return View("Summary",summary);
         }

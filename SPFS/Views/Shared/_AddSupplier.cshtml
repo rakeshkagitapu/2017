@@ -2,8 +2,8 @@
 @model SPFS.Models.RatingsViewModel
 
 <div class="row col-md-12" style="margin-top: 10px">
-    <div class="row">
-        <div class="col-md-10 input-group">
+    <div class="row" style="padding-right:2px;">
+        <div class="col-md-8 input-group">
             @*@Html.Label("Search by")*@
 
             @Html.TextBox("search", "", new { @class = "form-control", id = "SupplierID", maxlength = "30", placeholder = "Search by Supplier Name ..." })
@@ -13,10 +13,14 @@
                 </button>
             </span>
         </div>
-        <div class="col-md-2">
+        <div class="col-md-4 input-group" style="padding-right:5px;padding-left:5px;">
             <button type="button" class="btn btn-primary btnOK">
                 <span class="glyphicon glyphicon-floppy-save"></span>
                 <span>OK</span>
+            </button>
+            <button type="button" class="btn btn-danger btnCl">
+                <span class="glyphicon glyphicon-remove"></span>
+                <span>Cancel</span>
             </button>
         </div>
 

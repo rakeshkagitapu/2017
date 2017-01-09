@@ -166,8 +166,10 @@ namespace SPFS.Controllers
                     }
                     else
                     {
-                        ModelState.AddModelError("File", "This file format is not supported");
-                        return View();
+                        ModelState.AddModelError("UploadFile", "Please upload Valid File");
+                        ratingModel.ShowResult = true;
+                        CreateListViewBags();
+                        return View("Index", ratingModel);
                     }
                     ratingModel = ProcessExcelDataintoViewModel(ratingModel, result);
                     ViewBag.Suppliers = selectSuppliers;
@@ -194,7 +196,8 @@ namespace SPFS.Controllers
                     }
                     else
                     {
-                        ModelState.AddModelError("UploadFile", "Please upload Valid File");
+                        ModelState.AddModelError("UploadFile", "Please check columns CID,DUNS,ERPSupplierID,Inbound quantity has invalid values");
+                        ratingModel.ShowResult = true;
                         CreateListViewBags();
                         return View("Index", ratingModel);
                     }
@@ -203,6 +206,7 @@ namespace SPFS.Controllers
                 {
                     ModelState.AddModelError("UploadFile", "Please Upload Your file");
                     CreateListViewBags();
+                    ratingModel.ShowResult = true;
                     return View("Index",ratingModel );
                 }
             }
@@ -753,7 +757,7 @@ namespace SPFS.Controllers
             return PartialView("_SupplierRatings", RatingModel);
         }
 
-        public JsonResult UpdateRating(int CID,int Inbound, int OTR, int OTD, int PFR, double PPM, double IPM,double PCT )
+        public JsonResult UpdateRating(int CID,int Inbound, int OTR, int OTD, int PFR, double PPM, double IPM,double PCT, int SiteID, int Month, int Year)
         {
 
             //RatingsViewModel RatingModel = new RatingsViewModel();
@@ -766,6 +770,30 @@ namespace SPFS.Controllers
 
             TempData["SearchedResults"] = RatingModel;
 
+            int CheckingDate = Convert.ToInt32("" + Year + Month.ToString().PadLeft(2, '0'));
+            Utilities util = new Utilities();
+            using (Repository repository = new Repository())
+
+            {
+                if (repository.Context.SPFS_SUPPLIER_RATINGS.Any(s => s.SiteID == SiteID && s.Rating_period == CheckingDate && s.CID == CID))
+                {
+                    var rec = repository.Context.SPFS_SUPPLIER_RATINGS.Where(s => s.SiteID == SiteID && s.Rating_period == CheckingDate && s.CID == CID).FirstOrDefault();
+                    if (rec != null)
+                    {
+                        rec.Inbound_parts = Inbound;
+                        rec.OTD = OTD;
+                        rec.OTR = OTR;
+                        rec.PFR = PFR;
+                        rec.Interface_flag = true;
+                        rec.UserID = util.GetCurrentUser().UserID;
+                        rec.Modified_date = DateTime.Now;
+                        rec.Modified_by = util.GetCurrentUser().UserName;
+                    }
+                    repository.Context.SaveChanges();
+
+                }
+
+            }
 
             return Json(true, JsonRequestBehavior.AllowGet);
         }
@@ -1158,8 +1186,8 @@ namespace SPFS.Controllers
                 match.x.OTD = match.y.OTD;
                 match.x.OTR = match.y.OTR;
                 match.x.PFR = match.y.PFR;
-                match.x.Reject_incident_count = match.y.Reject_incident_count;
-                match.x.Reject_parts_count = match.y.Reject_parts_count;
+                //match.x.Reject_incident_count = match.y.Reject_incident_count;
+                //match.x.Reject_parts_count = match.y.Reject_parts_count;
                 match.x.Temp_Upload_ = match.y.Temp_Upload_;
                 match.x.ErrorInformation = match.y.ErrorInformation;
                 match.x.Interface_flag = match.y.Interface_flag;
@@ -1375,7 +1403,27 @@ namespace SPFS.Controllers
 
                 List<RatingRecord> prodrecs = ProdRecords(ratingModel, CheckingDate, repository);
                 List<RatingRecord> stagrecs = StageRecords(ratingModel, CheckingDate, repository);
-                ratingModel.RatingRecords = prodrecs != null ? prodrecs.Union(stagrecs).ToList() : stagrecs;
+                List<RatingRecord> MergedRecords = new List<RatingRecord>();
+                
+
+                var query = from x in stagrecs
+                            join y in prodrecs
+                            on x.CID equals y.CID
+                            select new { x, y };
+             
+                var unmatch = (from agrr in prodrecs
+                               where !(stagrecs.Any(i => i.CID == agrr.CID))
+                               select agrr).ToList();
+
+
+                if (unmatch != null)
+                {
+                    stagrecs.AddRange(unmatch);
+                }
+
+
+
+                ratingModel.RatingRecords =stagrecs;  // prodrecs != null ? prodrecs.Union(stagrecs).ToList() : 
 
             }
 

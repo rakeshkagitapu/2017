@@ -128,7 +128,7 @@
                     @Html.HiddenFor(modelItem => Model.RatingRecords[i].PCT, new { @id = "PCT" })
                 </td>
 
-                <td rowspan="2"> @Html.TextBoxFor(modelItem => Model.RatingRecords[i].PFR, null, new { @class = "form-control calcrow", maxlength = 4, style = "width:60%" })</td>
+                <td rowspan="2"> @Html.TextBoxFor(modelItem => Model.RatingRecords[i].PFR, null, new { @class = "form-control calcrow", maxlength = 3, style = "width:60%" })</td>
                 @Html.ValidationMessageFor(modelItem => Model.RatingRecords[i].PFR, "", new { style = "display:none" })
             </tr>
 

@@ -78,13 +78,18 @@
                 @Html.Raw(ViewBag.alertmsg)
                 <br />
                 <div class="btn-group pull-right">
-                    @if (Model.IsPreviousStagingRatings)
+                    @if (Model.IsCurrentRatings && Model.IsStagingRatings)
+                    {
+                        <a href="@Url.Action("LoadAlertDataCurrent", "Ratings", new { SiteID = Model.SiteID, Year = Model.Year, Month = Model.Month })" class="btn btn-success btn-smd">Yes - Overwrite existing data </a>
+                        <a href="@Url.Action("ClearStaging", "ExcelUpload", new { SiteID = Model.SiteID, Year = Model.Year, Month = Model.Month})" class="btn btn-danger btn-md">No - Continue with Upload and clear saved data</a>
+                    }
+                    else if (Model.IsPreviousStagingRatings)
                     {
 
                     <a href="@Url.Action("LoadAlertData", "Ratings", new { SiteID =Model.SiteID,Year=Model.Year,Month=Model.Month, isStaging = true ,isLastmonth=true})" class="btn btn-success btn-md">Yes - Load last months data </a>
                     <a href="@Url.Action("LoadAlertData", "Ratings", new { SiteID =Model.SiteID,Year=Model.Year,Month=Model.Month, isStaging = false, isLastmonth = false})" class="btn btn-danger btn-md">No - Continue with current ratings</a>
                     }
-                    @if (Model.IsCurrentRatings)
+                    else if (Model.IsCurrentRatings)
                     {
                     <a href="@Url.Action("LoadAlertDataCurrent", "Ratings", new { SiteID = Model.SiteID, Year = Model.Year, Month = Model.Month })" class="btn btn-success btn-smd">Yes - Overwrite existing data </a>
                     <a href="@Url.Action("Index", "Ratings")" class="btn btn-danger btn-md">No - Clear Search criteria</a>
@@ -102,7 +107,7 @@
             if (!ViewData.ModelState.IsValid)
             {
                 <div class="alert alert-warning alert-dismissible col-md-12" role="alert" style="padding-top: 1px;">
-                    <span class="glyphicon  glyphicon-info-sign"></span><strong>Errors!</strong> Please fill all highlighted cells
+                    <span class="glyphicon  glyphicon-info-sign"></span><strong>Errors!</strong> Suppliers with Reject Incidents and Reject Quantities MUST be rated
                 </div>
             }
             
@@ -123,10 +128,10 @@
 
                 </div>
                 <div class="pull-right">
-                    <a href="@Url.Action("Index", "Home")" class="btn btn-danger" onclick="return confirm('Are you sure, all data will be lost')">
+                    <a href="@Url.Action("Index", "Ratings")" class="btn btn-danger" onclick="return confirm('Are you sure you want to cancel')">
                         <span class="glyphicon glyphicon-remove"></span> Cancel
                     </a>
-                    <input type="button" value="Clear" onclick="javascript:window.location=('@Url.Action("Index","Ratings")')" class="btn btn-warning" />
+                    @*<input type="button" value="Clear" onclick="javascript:window.location=('@Url.Action("Index","Ratings")')" class="btn btn-warning" />*@
                     @*<a href="@Url.Action("Index", "Ratings")" class="btn btn-warning" onclick="return confirm('Are you sure, all data will be lost')">
                             <span class="glyphicon glyphicon-remove-sign"></span> Clear
                         </a>*@
@@ -209,7 +214,7 @@
 <script type="text/javascript">
       function confirmSave() {
 
-          if(confirm('Are you sure you want to save, all records that have no inbound quantity will be ommited?'))
+          if(confirm('Are you sure you want to save, all records that have no inbound quantity will be omitted?'))
           {
                     var divObj= $('#dlgsve');
                     divObj.dialog('open');
@@ -217,6 +222,7 @@
 
                     if($('#Ratings').valid())
                     {
+                        
                         SaveRecords();
 
                     }
@@ -309,6 +315,29 @@
                 }
            // }
         }
+    function scrolltoSupplier(CID)
+    {
+        var tableRow = $("#ratings tr td:nth-child(1)").filter(function () {
+            return $(this).is(":contains('" + CID + "')");
+        }).closest("tr");
+        debugger
+        if (tableRow.length > 0) {
+            $("#ratings").find('tr').removeClass('active');
+            var oldrec = $("#selectedCid").closest('tr').attr("id", "");
+            $("#popSup").closest('.ui-dialog-content').dialog("close");
+            
+            var row = tableRow.addClass('active');
+            row.attr("id", "selectedCid");
+
+            var container = $('tbody');
+            var scrollTo = $('#selectedCid');
+
+            container.animate({
+                scrollTop: (scrollTo.offset().top - 30) - container.offset().top + container.scrollTop()
+            });
+
+        }
+    }
     $(document).ready(function () {
         $('#dlgsve').hide();
         //$("#dlgmodal").dialog({   // jQuery UI Dialog test
@@ -453,7 +482,7 @@
                 } else {
                     PFR = 0;
                 }
-                if(Inbound >0)
+                if((Inbound >0) && (OTR < 0) || (OTD < 0))
                 {
                    datacount +=1;
                 }
@@ -566,10 +595,18 @@
                 cache: true,
 
                 success: function (data) {
-                    $('#selectSupplierID').find('option').remove();
-                    $.each(data, function (i, optionData) {
-                        $('#selectSupplierID').append($('<option></option>').val(optionData.Value).html(optionData.Text));
-                    });
+                    if(data.length > 0)
+                    {
+                        $('#selectSupplierID').find('option').remove();
+                        $.each(data, function (i, optionData) {
+                            $('#selectSupplierID').append($('<option></option>').val(optionData.Value).html(optionData.Text));
+                        });
+                    }
+
+                    else {
+                        ShowDialogBox('Alert', 'No results found.', 'Ok', '', '', null);
+                        $('#selectSupplierID').find('option').remove();
+                    }
                 }
             });
         };
@@ -591,6 +628,13 @@
             $("#popSup").dialog('option', 'title', 'Select Supplier');
             $("#popSup").dialog("open");
 
+        });
+
+        $('#popSup').on("click", ".btnCl", function (e)
+        {
+            
+            $("#popSup").closest('.ui-dialog-content').dialog("close");
+            
         });
 
         //$('.btnAdd').bind("click", function () {
@@ -637,6 +681,7 @@
                         cache: false,
                         dataType: 'html',
                         async: false,
+                        CID:selectedValue,
                         success: function (data) {
                             var finaltext = selectedText + " Added to list";
                             $("#selectSupplierID").find("option:selected").prop('selected', false);
@@ -645,12 +690,16 @@
                             $("#popSup").closest('.ui-dialog-content').dialog("close");
                             $('#RatingSuppliers').selectpicker('refresh');
                         },
+                        complete: function (jqXHR, textStatus, errorThrown) {
+                            
+                            scrolltoSupplier(this.CID);
+                        },
                         error: function (ts) { alert(ts.responseText) }
                     });
                 }
             }
             else {
-                ShowDialogBox('Alert', 'Supplier not selected!.', 'Ok', '', '', null);
+                ShowDialogBox('Alert', 'Please select Supplier or click cancel.', 'Ok', '', '', null);
                 //alert("Select Supplier");
             }
         });
@@ -698,11 +747,12 @@
 
         $('#popSup').dialog({
             autoOpen: false,
-            width: 600,
+            width: 620,
             height: 350,
             resizable: false,
             title: 'Select Supplier',
             modal: true,
+            hide: { effect: 'scale', duration: 400 },
             open: function (event, ui) {
 
             }
@@ -724,7 +774,7 @@
         });
 
         $(document).on("change", ".calcrow", function () {
-
+         
 
             //var inbound = $(this).closest('tr').find('#Inbound').val();
             //var otr = $(this).closest('tr').find('#OTR').val();
@@ -783,12 +833,15 @@
 
 
             var cid = $('#RatingRecords_' + rowid + '__CID').val();
+            var siteID = @Html.Raw(Json.Encode(Model.SiteID));
+            var month =@Html.Raw(Json.Encode(Model.Month));
+            var year = @Html.Raw(Json.Encode(Model.Year));
             //  var
             // var cid = $
             $.ajax({
                 url: '@Url.Action("UpdateRating", "Ratings")',
                 //Passes the content of an input up
-                data: { CID: cid, Inbound: inbound, OTR: otr, OTD: otd, PFR: pfr, RI: ri, RP: rp, PPM: ppm, IPM: ipm, PCT: pct }, //,SiteID:siteId,count:cont
+                data: { CID: cid, Inbound: inbound, OTR: otr, OTD: otd, PFR: pfr, RI: ri, RP: rp, PPM: ppm, IPM: ipm, PCT: pct,SiteID: siteId,Month: month, Year: year }, //,SiteID:siteId,count:cont
                 contentType: "application/json; charset=utf-8",
                 type: 'GET',
                 cache: false,
